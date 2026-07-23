@@ -973,13 +973,23 @@ async function loadVaultImageGallery(isEdit = false) {
             if (data.icon) usedIcons.add(data.icon);
         });
 
-        // Fetch all available images from Node.js Backend API
-        const response = await fetch(`/api/images/${category}`);
-        if (!response.ok) throw new Error("Backend not running or error");
-        const data = await response.json();
+        // Fetch all available images directly from GitHub API
+        const githubApiUrl = `https://api.github.com/repos/killerxoffical/booyahmini-app/contents/images/${category}`;
+        const response = await fetch(githubApiUrl);
         
-        if (data.images && data.images.length > 0) {
-            data.images.forEach(filename => {
+        let availableImages = [];
+        if (response.ok) {
+            const rawData = await response.json();
+            availableImages = rawData
+                .filter(item => item.type === 'file')
+                .filter(file => ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'].includes(file.name.slice(file.name.lastIndexOf('.')).toLowerCase()))
+                .map(file => file.name);
+        } else if (response.status !== 404) {
+            console.error("GitHub API Error", response.statusText);
+        }
+        
+        if (availableImages.length > 0) {
+            availableImages.forEach(filename => {
                 const fullPath = `images/${category}/${filename}`;
                 const isUsed = usedIcons.has(fullPath);
                 

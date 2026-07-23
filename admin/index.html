@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOOYAH DAY - Admin Panel</title>
+    <link rel="icon" type="image/png" href="../images/app-logo.webp">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <!-- Use the main project config -->
+    <script src="../firebase-config.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        booyah: '#FF6B00',
+                        booyahYellow: '#FFD700',
+                        booyahOrange: '#FF8C00',
+                        card: '#1A2234',
+                        darkBg: '#0B0F19',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0B0F19; color: #E2E8F0; }
+        .bg-card { background-color: #1A2234; }
+        .text-booyah { color: #FF6B00; }
+        .bg-booyah { background-color: #FF6B00; }
+
+        /* Skeleton loader animation */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #1A2234 25%, #2a3450 50%, #1A2234 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 6px;
+        }
+
+        /* Pulse dot for live status */
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .live-dot {
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        /* Smooth table row appear */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .row-animate {
+            animation: fadeInUp 0.3s ease-out forwards;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0B0F19; }
+        ::-webkit-scrollbar-thumb { background: #2a3450; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3a4a6a; }
+    </style>
+</head>
+<body class="min-h-screen bg-[#0B0F19]">
+
+    <!-- App Container (Hidden until logged in) -->
+    <div id="app-container" class="min-h-screen w-full flex hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-card border-r border-gray-800 flex flex-col hidden md:flex">
+        <div class="p-6 border-b border-gray-800 flex items-center gap-3">
+            <img src="https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free fire/Badge/BWbadge.webp" class="w-12 h-12 object-cover rounded-xl shadow-[0_0_15px_rgba(255,204,0,0.3)]">
+            <div>
+                <h1 class="font-bold text-lg text-white leading-tight">BOOYAH DAY</h1>
+                <p class="text-xs text-gray-400 uppercase tracking-widest">Admin Panel</p>
+            </div>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="w-full text-left px-4 py-3 rounded-lg bg-booyah text-white font-medium transition">Dashboard</button>
+            <button onclick="switchTab('users')" id="tab-users" class="w-full text-left px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white font-medium transition">Manage Users</button>
+            <button onclick="switchTab('tournaments')" id="tab-tournaments" class="w-full text-left px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white font-medium transition">Tournaments</button>
+            <button onclick="switchTab('monetag')" id="tab-monetag" class="w-full text-left px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white font-medium transition text-booyahYellow">Monetag Ads</button>
+            <button onclick="switchTab('vault-codes')" id="tab-vault-codes" class="w-full text-left px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white font-medium transition">Vault Codes</button>
+            <button onclick="switchTab('notifications')" id="tab-notifications" class="w-full text-left px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white font-medium transition">Notifications</button>
+        </nav>
+        <div class="p-4 border-t border-gray-800">
+            <button onclick="logoutAdmin()" class="w-full px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 font-medium transition flex items-center justify-center gap-2">
+                Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <!-- Header -->
+        <header class="h-16 bg-card border-b border-gray-800 flex items-center justify-between px-6">
+            <h2 class="text-xl font-bold text-white" id="page-title">Dashboard</h2>
+            <div class="flex items-center gap-3">
+                <!-- Live indicator -->
+                <div class="flex items-center gap-1.5 bg-green-500/10 px-3 py-1 rounded-full">
+                    <div class="w-2 h-2 rounded-full bg-green-400 live-dot"></div>
+                    <span class="text-xs text-green-400 font-medium">LIVE</span>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-sm font-bold">A</div>
+                <span class="text-sm font-medium">Admin</span>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto p-6" id="content-area">
+            
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-card p-6 rounded-xl border border-gray-800">
+                        <h3 class="text-gray-400 text-sm font-medium">Total Users</h3>
+                        <p class="text-3xl font-bold text-white mt-2" id="stat-users">
+                            <span class="skeleton inline-block w-16 h-8">&nbsp;</span>
+                        </p>
+                    </div>
+                    <div class="bg-card p-6 rounded-xl border border-gray-800">
+                        <h3 class="text-gray-400 text-sm font-medium">Active Tournaments</h3>
+                        <p class="text-3xl font-bold text-white mt-2" id="stat-tournaments">0</p>
+                    </div>
+                    <div class="bg-card p-6 rounded-xl border border-gray-800">
+                        <h3 class="text-gray-400 text-sm font-medium">Total Matches</h3>
+                        <p class="text-3xl font-bold text-white mt-2">0</p>
+                    </div>
+                </div>
+
+                <!-- Settings Block -->
+                <div class="bg-card p-6 rounded-xl border border-gray-800 mt-6">
+                    <h3 class="text-white font-bold mb-4 uppercase tracking-widest text-sm border-b border-gray-800 pb-2">System Settings</h3>
+                    
+                    <div class="max-w-md space-y-4 mt-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase">Telegram Bot URL</label>
+                            <input type="text" id="admin-telegram-url" placeholder="https://t.me/your_bot" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white outline-none focus:border-booyahYellow transition">
+                        </div>
+                        <button onclick="saveTelegramBotUrl()" class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition active:scale-95 shadow-[0_0_15px_rgba(37,99,235,0.3)]">
+                            Save Telegram Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monetag Ads View -->
+            <div id="view-monetag" class="hidden space-y-6">
+                <div class="bg-card p-6 rounded-xl border border-gray-800">
+                    <h3 class="text-white font-bold mb-4">Add Monetag Direct Link</h3>
+                    <div class="flex gap-3">
+                        <input type="text" id="monetag-link-input" placeholder="https://..." class="flex-1 bg-[#0B0F19] border border-gray-700 rounded-lg px-4 py-2 text-white outline-none focus:border-booyahYellow">
+                        <button onclick="addMonetagLink()" class="bg-booyahYellow text-black font-bold px-6 py-2 rounded-lg hover:bg-yellow-400 transition">ADD LINK</button>
+                    </div>
+                </div>
+
+                <div class="bg-card rounded-xl border border-gray-800 overflow-hidden">
+                    <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+                        <h3 class="font-bold text-white">Active Monetag Links</h3>
+                        <span id="monetag-count-badge" class="bg-booyahYellow/20 text-booyahYellow text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-300">
+                            <thead class="text-xs uppercase bg-gray-800/50 text-gray-400">
+                                <tr>
+                                    <th class="px-6 py-3 font-medium">Link ID</th>
+                                    <th class="px-6 py-3 font-medium">URL</th>
+                                    <th class="px-6 py-3 font-medium text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monetag-table-body" class="divide-y divide-gray-800/50">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users View -->
+            <div id="view-users" class="hidden space-y-6">
+                <div class="bg-card rounded-xl border border-gray-800 overflow-hidden">
+                    <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <h3 class="font-bold text-white">Registered Users</h3>
+                            <span id="users-count-badge" class="bg-booyah/20 text-booyah text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-400">
+                            <thead class="bg-gray-800/50 text-gray-300">
+                                <tr>
+                                    <th class="px-6 py-4 font-medium">User Profile</th>
+                                    <th class="px-6 py-4 font-medium">Diamonds</th>
+                                    <th class="px-6 py-4 font-medium">Coins</th>
+                                    <th class="px-6 py-4 font-medium">Last Claim</th>
+                                    <th class="px-6 py-4 font-medium">Next Claim</th>
+                                    <th class="px-6 py-4 font-medium">Joined</th>
+                                    <th class="px-6 py-4 font-medium text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="divide-y divide-gray-800">
+                                <!-- Users will be populated here via real-time listener -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tournaments View -->
+            <div id="view-tournaments" class="hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-white">Tournaments</h3>
+                    <button class="bg-booyah hover:bg-[#E56000] text-white px-4 py-2 rounded-lg text-sm font-bold transition">
+                        + Create Tournament
+                    </button>
+                </div>
+                <div class="bg-card rounded-xl border border-gray-800 p-8 text-center">
+                    <p class="text-gray-400">Tournament management UI coming soon.</p>
+                </div>
+            </div>
+
+            <!-- Vault Codes View -->
+            <div id="view-vault-codes" class="hidden space-y-6">
+                <div class="bg-card p-6 rounded-xl border border-gray-800">
+                    <h3 class="text-white font-bold mb-4 uppercase tracking-widest text-sm">Generate New Vault Code</h3>
+                    <form id="vault-code-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase">Item Name</label>
+                                <input type="text" id="vc-name" placeholder="e.g. Fire Skull Avatar" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white outline-none focus:border-booyahYellow" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase">Category</label>
+                                <select id="vc-category" onchange="updateVaultImagePreview()" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white outline-none focus:border-booyahYellow font-bold">
+                                    <option value="avatar">Avatar</option>
+                                    <option value="banner">Banner</option>
+                                    <option value="badge">Badge</option>
+                                    <option value="others">Others</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-xs font-medium text-gray-400 mb-2 uppercase">Select Image <span id="gallery-loading" class="text-booyahYellow hidden ml-2 text-[10px]">Loading...</span></label>
+                            
+                            <!-- Visual Image Picker Grid -->
+                            <div id="image-picker-grid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 max-h-48 overflow-y-auto p-2 bg-gray-900 border border-gray-700 rounded-lg">
+                                <!-- Populated by JS -->
+                                <div class="col-span-full text-center text-xs text-gray-500 py-4">Select a category to load images</div>
+                            </div>
+
+                            <!-- Hidden input to store the selected filename -->
+                            <input type="hidden" id="vc-icon" required>
+                            <p class="text-[10px] text-gray-500 mt-2">Selected: <span id="vc-selected-name" class="text-booyahYellow font-bold">None</span></p>
+                        </div>
+                        <button type="button" onclick="generateVaultCode()" class="bg-gradient-to-r from-booyahOrange to-booyahYellow text-black px-6 py-2.5 rounded-lg text-sm font-bold transition mt-4 active:scale-95 shadow-[0_0_15px_rgba(255,204,0,0.2)]">
+                            GENERATE REDEEM CODE
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="bg-card rounded-xl border border-gray-800 overflow-hidden">
+                    <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+                        <h3 class="font-bold text-white text-sm uppercase">Active Codes</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-300">
+                            <thead class="text-xs uppercase bg-gray-800/50 text-gray-400">
+                                <tr>
+                                    <th class="px-6 py-3 font-medium">Code</th>
+                                    <th class="px-6 py-3 font-medium">Item</th>
+                                    <th class="px-6 py-3 font-medium">Category</th>
+                                    <th class="px-6 py-3 font-medium">Status</th>
+                                    <th class="px-6 py-3 font-medium text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vault-codes-tbody" class="divide-y divide-gray-800/50">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications View -->
+            <div id="view-notifications" class="hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-white">Global Notifications</h3>
+                </div>
+                <div class="bg-card rounded-xl border border-gray-800 p-8 max-w-2xl">
+                    <form id="notification-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-1.5">Image URL (Optional)</label>
+                            <input type="text" id="notif-image" placeholder="https://example.com/image.png" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none focus:border-booyah">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-1.5">Message / Description</label>
+                            <textarea id="notif-message" rows="4" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white outline-none focus:border-booyah" required placeholder="Write your notification message here..."></textarea>
+                        </div>
+                        <button type="button" onclick="sendGlobalNotification()" class="bg-booyah hover:bg-[#E56000] text-white px-6 py-2.5 rounded-lg text-sm font-bold transition mt-2">
+                            SEND NOTIFICATION
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+        </div>
+    </main>
+    </div> <!-- End of app-container -->
+
+    <!-- Login Screen (Shown by default until auth confirms admin) -->
+    <div id="login-screen" class="fixed inset-0 bg-[#0B0F19] z-50 flex items-center justify-center">
+        <div class="bg-card p-8 rounded-2xl border border-gray-800 w-full max-w-md mx-4 shadow-2xl">
+            <!-- 2 Login Tabs (PIN or Email) -->
+            <div class="flex border-b border-gray-800 mb-6" id="login-tabs">
+                <button onclick="switchLoginTab('pin')" id="login-tab-pin" class="flex-1 pb-2.5 text-xs font-bold text-booyahYellow border-b-2 border-booyahYellow uppercase tracking-widest">PIN Login</button>
+                <button onclick="switchLoginTab('email')" id="login-tab-email" class="flex-1 pb-2.5 text-xs font-bold text-gray-500 border-b-2 border-transparent uppercase tracking-widest">Email Login</button>
+            </div>
+
+            <!-- PIN Login View -->
+            <div id="pin-login-fields" class="space-y-6">
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-4 rounded-3xl p-1 bg-gradient-to-tr from-booyahYellow to-booyahOrange shadow-[0_0_20px_rgba(255,204,0,0.25)] animate-pulse">
+                        <img src="https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free fire/Badge/BWbadge.webp" class="w-full h-full object-cover rounded-[22px]">
+                    </div>
+                    <h1 class="text-lg font-black text-white tracking-widest uppercase">Admin Access</h1>
+                    <p class="text-[11px] text-gray-400 mt-0.5 font-medium uppercase">Enter 4-digit security PIN</p>
+                </div>
+                <div>
+                    <input type="password" id="admin-pin" maxlength="4" placeholder="••••" class="w-full bg-gray-900 border-2 border-gray-700 rounded-xl px-4 py-4 text-center text-3xl tracking-[1em] text-white focus:outline-none focus:border-booyahYellow transition shadow-inner font-mono" required>
+                </div>
+                <button type="button" id="admin-login-btn" onclick="authorizeAdmin()" class="w-full bg-gradient-to-r from-booyahOrange to-booyahYellow text-black font-black tracking-widest rounded-xl py-4 hover:brightness-110 transition shadow-[0_0_20px_rgba(255,140,0,0.4)] active:scale-95">
+                    AUTHORIZE
+                </button>
+            </div>
+
+            <!-- Email Login View (Hidden initially) -->
+            <div id="email-login-fields" class="space-y-4 hidden">
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-4 rounded-3xl p-1 bg-gradient-to-tr from-booyahYellow to-booyahOrange shadow-[0_0_20px_rgba(255,204,0,0.25)] animate-pulse">
+                        <img src="https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free fire/Badge/BWbadge.webp" class="w-full h-full object-cover rounded-[22px]">
+                    </div>
+                    <h1 class="text-lg font-black text-white tracking-widest uppercase">Console Sign In</h1>
+                    <p class="text-[11px] text-gray-400 mt-0.5 font-medium uppercase">Enter credentials to authenticate</p>
+                </div>
+                <div class="space-y-3">
+                    <input type="email" id="admin-email" placeholder="Email Address" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-booyahYellow transition shadow-inner">
+                    <input type="password" id="admin-password" placeholder="Password" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-booyahYellow transition shadow-inner">
+                </div>
+                <button type="button" id="admin-email-btn" onclick="loginWithEmail()" class="w-full bg-gradient-to-r from-booyahOrange to-booyahYellow text-black font-black tracking-widest rounded-xl py-4 hover:brightness-110 transition shadow-[0_0_20px_rgba(255,140,0,0.4)] active:scale-95">
+                    SIGN IN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal (Full Screen) -->
+    <div id="edit-user-modal" class="fixed inset-0 bg-black/95 z-50 flex items-center justify-center hidden overflow-y-auto pb-10">
+        <div class="bg-[#111111] border border-gray-800 w-full max-w-4xl min-h-[90vh] rounded-2xl p-6 shadow-2xl flex flex-col transform scale-95 transition-transform duration-200 mt-10" id="edit-user-modal-box">
+            
+            <!-- Header (Profile) -->
+            <div class="flex items-start justify-between border-b border-gray-800 pb-6 mb-6">
+                <div class="flex items-center gap-6">
+                    <img id="edit-user-avatar" src="https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free%20fire/1780775687157_1780775598577.png" class="w-24 h-24 rounded-2xl object-cover bg-gray-900 border border-gray-800 p-2 shadow-lg">
+                    <div>
+                        <h2 id="edit-user-name" class="text-3xl font-black text-white uppercase tracking-wider">Loading...</h2>
+                        <p id="edit-user-uid" class="text-sm font-mono text-booyahYellow tracking-widest mt-1">UID: XXXX</p>
+                        <div class="flex gap-4 mt-3">
+                            <div class="bg-gray-900 px-3 py-1.5 rounded-lg border border-gray-800 text-xs font-bold text-gray-400">LVL: <span id="edit-user-level" class="text-white">0</span></div>
+                            <div class="bg-gray-900 px-3 py-1.5 rounded-lg border border-gray-800 text-xs font-bold text-gray-400">XP: <span id="edit-user-xp" class="text-white">0</span></div>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="closeEditModal()" class="w-10 h-10 rounded-full bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/50 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
+                
+                <!-- Left Column: Balances & Limits -->
+                <div class="space-y-6">
+                    <div class="bg-gray-900/50 p-5 rounded-xl border border-gray-800">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Currency Balance</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Diamonds</label>
+                                <input type="number" id="edit-diamonds" class="w-full bg-[#1A1A1A] border border-gray-700 rounded-lg px-4 py-2.5 text-booyahYellow font-bold outline-none focus:border-booyah">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Coins</label>
+                                <input type="number" id="edit-coins" class="w-full bg-[#1A1A1A] border border-gray-700 rounded-lg px-4 py-2.5 text-booyahYellow font-bold outline-none focus:border-booyah">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-900/50 p-5 rounded-xl border border-gray-800">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Claim Timer</h3>
+                        <p id="edit-claim-status" class="text-xs text-gray-400 mb-3">Loading...</p>
+                        <button onclick="resetClaimTimer()" class="w-full py-2.5 rounded-lg bg-green-600/20 border border-green-500/30 text-green-400 font-bold hover:bg-green-600/30 transition text-xs uppercase tracking-wider">
+                            Reset Timer
+                        </button>
+                    </div>
+
+                    <button onclick="saveUserBalance()" class="w-full py-4 rounded-xl bg-gradient-to-r from-booyahOrange to-booyahYellow text-black font-black uppercase tracking-widest hover:brightness-110 transition shadow-[0_0_20px_rgba(255,204,0,0.2)]">
+                        Save Changes
+                    </button>
+                </div>
+
+                <!-- Right Column: Vault Items -->
+                <div class="lg:col-span-2 bg-gray-900/50 rounded-xl border border-gray-800 flex flex-col overflow-hidden h-[500px]">
+                    <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900">
+                        <h3 class="text-sm font-black text-white uppercase tracking-widest">User Vault</h3>
+                        
+                        <div class="flex gap-2">
+                            <input type="text" id="add-vault-code-input" placeholder="Enter Item Code" class="bg-[#111111] border border-gray-700 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-booyahYellow w-32 uppercase">
+                            <button onclick="adminAddVaultItem()" class="bg-booyah text-white px-3 py-1.5 rounded-lg text-xs font-bold transition hover:bg-[#E56000]">Add Item</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-4">
+                        <div id="admin-user-vault-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="admin-custom-alert" class="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-card p-6 rounded-2xl border border-gray-700 w-full max-w-sm mx-4 transform scale-95 transition-transform duration-300 flex flex-col items-center text-center shadow-2xl">
+            <svg id="alert-icon-error" class="w-14 h-14 text-red-500 mb-4 hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <svg id="alert-icon-success" class="w-14 h-14 text-emerald-500 mb-4 hidden" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            
+            <h3 id="alert-title" class="text-lg font-black text-white mb-2 uppercase tracking-widest">MESSAGE</h3>
+            <p id="alert-message" class="text-sm text-gray-300 mb-6 font-medium whitespace-pre-line"></p>
+            
+            <button onclick="closeCustomAlert()" class="w-full py-3 rounded-xl bg-booyah text-white font-bold hover:bg-[#E56000] transition active:scale-95">OKAY</button>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="admin-custom-confirm" class="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-card p-6 rounded-2xl border border-gray-700 w-full max-w-sm mx-4 transform scale-95 transition-transform duration-300 flex flex-col items-center text-center shadow-2xl">
+            <svg class="w-14 h-14 text-booyahOrange mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            
+            <h3 class="text-lg font-black text-white mb-2 uppercase tracking-widest">ARE YOU SURE?</h3>
+            <p id="confirm-message" class="text-sm text-gray-300 mb-6 font-medium whitespace-pre-line"></p>
+            
+            <div class="flex gap-3 w-full">
+                <button onclick="closeCustomConfirm(false)" class="flex-1 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white font-bold hover:bg-gray-700 transition active:scale-95">CANCEL</button>
+                <button onclick="closeCustomConfirm(true)" class="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition active:scale-95">YES, DELETE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Vault Code Modal -->
+    <div id="edit-vault-code-modal" class="fixed inset-0 bg-black/80 z-[70] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-card p-6 rounded-2xl border border-gray-700 w-full max-w-md mx-4 transform scale-95 transition-transform duration-300 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-black text-white uppercase tracking-widest">Edit Vault Code</h3>
+                <button onclick="closeEditVaultCodeModal()" class="text-gray-400 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <form id="edit-vault-code-form" class="space-y-4">
+                <input type="hidden" id="edit-vc-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase">Item Name</label>
+                        <input type="text" id="edit-vc-name" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white outline-none focus:border-booyahYellow" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase">Category</label>
+                        <select id="edit-vc-category" onchange="updateEditVaultImagePreview()" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white outline-none focus:border-booyahYellow font-bold">
+                            <option value="avatar">Avatar</option>
+                            <option value="banner">Banner</option>
+                            <option value="badge">Badge</option>
+                            <option value="others">Others</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-xs font-medium text-gray-400 mb-2 uppercase">Select Image <span id="edit-gallery-loading" class="text-booyahYellow hidden ml-2 text-[10px]">Loading...</span></label>
+                    <div id="edit-image-picker-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-3 max-h-48 overflow-y-auto p-2 bg-gray-900 border border-gray-700 rounded-lg">
+                        <div class="col-span-full text-center text-xs text-gray-500 py-4">Select a category to load images</div>
+                    </div>
+                    <input type="hidden" id="edit-vc-icon" required>
+                    <p class="text-[10px] text-gray-500 mt-2">Selected: <span id="edit-vc-selected-name" class="text-booyahYellow font-bold">None</span></p>
+                </div>
+                <button type="button" onclick="saveEditedVaultCode()" class="w-full bg-gradient-to-r from-booyahOrange to-booyahYellow text-black px-6 py-3 rounded-lg text-sm font-bold transition mt-4 active:scale-95 shadow-[0_0_15px_rgba(255,204,0,0.2)]">
+                    SAVE CHANGES
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js?v=2"></script>
+</body>
+</html>

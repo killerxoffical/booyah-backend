@@ -20,7 +20,7 @@ app.get('/api/images/:category', async (req, res) => {
 
     try {
         // Fetch from the main frontend repo
-        const githubApiUrl = `https://api.github.com/repos/killerxoffical/booyahmini-app/contents/images/${category}`;
+        const githubApiUrl = `https://api.github.com/repos/killerxoffical/booyah-backend/contents/images/${category}`;
         
         // Optional: If you face rate limits, you can add a Personal Access Token here
         // const headers = { 'Authorization': 'token YOUR_GITHUB_PAT' };

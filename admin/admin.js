@@ -127,7 +127,7 @@ window.loginWithEmail = async function() {
 function logoutAdmin() {
     // Unsubscribe all real-time listeners
     if (usersUnsubscribe) { usersUnsubscribe(); usersUnsubscribe = null; }
-    if (dashboardUnsubscribe) { dashboardUnsubscribe(); dashboardUnsubscribe = null; }
+    if (dashboardUnsubscribe) { dashboardUnsubscribe = null; }
     if (monetagRef) { monetagRef.off(); monetagRef = null; }
     
     localStorage.removeItem('booyah_admin_logged_in');
@@ -601,8 +601,8 @@ async function adminLoadUserVault(uid) {
                     <button onclick="adminRemoveVaultItem('${itemId}')" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg z-10 hover:bg-red-600">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
-                    <div class="h-16 flex items-center justify-center bg-gray-900 rounded-lg mb-2 overflow-hidden">
-                        <img src="${item.icon}" class="w-full h-full object-contain p-1">
+                    <div class="h-16 flex items-center justify-center bg-gray-900 rounded-lg mb-2 overflow-hidden cursor-pointer" onclick="openLightbox('../${item.icon}', '${item.name} (${item.category})')">
+                        <img src="../${item.icon}" class="w-full h-full object-contain p-1 hover:scale-110 transition duration-300">
                     </div>
                     <div class="text-[10px] text-white font-bold truncate text-center uppercase tracking-wider">${item.name}</div>
                     <div class="text-[9px] text-gray-400 font-bold truncate text-center uppercase">${item.category}</div>
@@ -890,10 +890,10 @@ function startVaultCodesListener() {
                     <td class="px-6 py-4 font-mono font-bold text-booyahYellow">${doc.id}</td>
                     <td class="px-6 py-4 text-white">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-gray-900 border border-gray-700 rounded overflow-hidden flex items-center justify-center p-1">
-                                <img src="${data.icon || ''}" class="max-w-full max-h-full object-contain">
+                            <div class="w-12 h-12 bg-gray-900 border border-gray-700 rounded overflow-hidden flex items-center justify-center p-1 cursor-pointer hover:border-booyahYellow transition shadow-lg" onclick="openLightbox('../${data.icon}', '${data.name} - ${doc.id}')">
+                                <img src="../${data.icon || ''}" class="max-w-full max-h-full object-contain hover:scale-110 transition duration-300">
                             </div>
-                            <span>${data.name}</span>
+                            <span class="font-bold">${data.name}</span>
                         </div>
                     </td>
                     <td class="px-6 py-4 uppercase text-xs font-bold text-gray-400">${data.category}</td>
@@ -1003,7 +1003,7 @@ async function loadVaultImageGallery(isEdit = false) {
                 `;
                 
                 imgDiv.onclick = () => {
-                    document.getElementById(selectedInputId).value = filename;
+                    document.getElementById(selectedInputId).value = fullPath;
                     document.getElementById(selectedNameId).textContent = filename;
                     // Highlight selection
                     Array.from(grid.children).forEach(child => child.classList.remove('border-booyahYellow', 'shadow-[0_0_10px_rgba(255,204,0,0.5)]'));
@@ -1121,3 +1121,31 @@ window.saveEditedVaultCode = async function() {
         showCustomAlert("Failed to update: " + e.message, "error");
     }
 };
+
+// ==========================================
+// LIGHTBOX (IMAGE PREVIEW)
+// ==========================================
+
+function openLightbox(imgSrc, caption) {
+    const lightbox = document.getElementById('image-lightbox');
+    const img = document.getElementById('lightbox-img');
+    const cap = document.getElementById('lightbox-caption');
+    
+    img.src = imgSrc;
+    cap.textContent = caption || '';
+    
+    lightbox.classList.remove('hidden');
+    setTimeout(() => {
+        lightbox.classList.remove('opacity-0');
+        document.getElementById('lightbox-content').classList.remove('scale-95');
+    }, 10);
+}
+
+function closeLightbox() {
+    const lightbox = document.getElementById('image-lightbox');
+    lightbox.classList.add('opacity-0');
+    document.getElementById('lightbox-content').classList.add('scale-95');
+    setTimeout(() => {
+        lightbox.classList.add('hidden');
+    }, 300);
+}

@@ -1,0 +1,14 @@
+{
+  "avatars": [
+    {
+      "id": "avatar_male_1",
+      "name": "Default Male",
+      "url": "https://raw.githubusercontent.com/your-username/booyah-app-assets/main/images/avatars/male1.png"
+    },
+    {
+      "id": "avatar_female_1",
+      "name": "Default Female",
+      "url": "https://raw.githubusercontent.com/your-username/booyah-app-assets/main/images/avatars/female1.png"
+    }
+  ]
+}

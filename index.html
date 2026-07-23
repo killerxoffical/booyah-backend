@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
+    <title>BOOYAH Arena</title>
+    <link rel="icon" type="image/png" href="images/app-logo.webp">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- Theme engine — MUST load before Tailwind -->
+    <script src="theme.js"></script>
+
+    <!-- Firebase SDK (Compat version for local file:// usage) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gameDark: 'rgb(var(--bg-primary-rgb) / <alpha-value>)',
+                        gameCard: 'rgb(var(--bg-card-rgb) / <alpha-value>)',
+                        gameCardLight: 'rgb(var(--bg-card-light-rgb) / <alpha-value>)',
+                        booyahOrange: '#FF6B00',
+                        booyahYellow: '#FFCC00',
+                        fireRed: '#E30052',
+                        cyberBlue: '#00F0FF',
+                        textDim: 'rgb(var(--text-dim-rgb) / <alpha-value>)',
+                        tPrimary: 'rgb(var(--text-primary-rgb) / <alpha-value>)',
+                        tBorder: 'rgb(var(--border-color-rgb) / <alpha-value>)'
+                    },
+                    fontFamily: { game: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: rgb(var(--bg-primary-rgb)); -webkit-tap-highlight-color: transparent; }
+        #progress-bar { position: relative; }
+        #progress-bar::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            right: 0;
+            width: 8px;
+            height: calc(100% + 4px);
+            background: #fff;
+            box-shadow: 0 0 12px 3px #FFCC00, 0 0 6px 2px #fff;
+            border-radius: 50%;
+            transform: translateX(50%);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="overflow-hidden w-screen h-screen relative flex flex-col justify-between select-none">
+
+    <!-- ================= 0. INTRO LOGO SCREEN ================= -->
+    <div id="intro-screen" class="absolute inset-0 z-[60] bg-black flex items-center justify-center transition-opacity duration-700">
+        <img id="intro-logo" src="images/others/app_logo2.webp" class="w-40 h-40 object-contain opacity-0 scale-75 transition-all duration-1000 ease-out drop-shadow-2xl">
+    </div>
+
+    <!-- ================= 1. FLASH SCREEN (SPLASH) ================= -->
+    <div id="flash-screen" class="absolute inset-0 z-50 flex flex-col justify-between items-center p-6 bg-black transition-all duration-700 bg-cover bg-center" style="background-image: url('images/others/loading_bg.webp');">
+        <!-- Background Overlay -->
+        <div class="absolute inset-0 bg-black/40 z-0 pointer-events-none"></div>
+
+        <div class="mt-8 text-center w-full z-10">
+            <!-- Top section left blank as requested -->
+        </div>
+
+        <div class="flex flex-col items-center justify-center w-full">
+            <!-- Middle section left blank as requested -->
+        </div>
+
+        <div class="w-10/12 max-w-md mb-12 z-10">
+            <div class="flex justify-between items-center mb-2 px-1">
+                <span id="loading-status" class="text-[9px] font-semibold text-textDim tracking-wider font-game">VERIFYING APP PARAMS...</span>
+                <span id="loading-percent" class="text-xs font-bold text-booyahYellow font-game">0%</span>
+            </div>
+            <div class="w-full h-1.5 bg-gameDark rounded-full overflow-hidden border border-tBorder/5">
+                <div id="progress-bar" class="h-full w-0 bg-gradient-to-r from-booyahOrange to-booyahYellow rounded-full"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 2. VIEWPORT FOR SCREENS (IFRAME) ================= -->
+    <div id="app-viewport" class="flex-1 w-full h-full opacity-0 transition-opacity duration-500 pointer-events-none z-10">
+        <iframe id="app-frame" src="" class="w-full h-full border-none"></iframe>
+    </div>
+
+    <!-- ================= 3. GLOBAL SLIM BOTTOM NAVIGATION BAR ================= -->
+    <nav id="global-navbar" class="hidden w-full bg-gameCard/95 border-t border-booyahOrange/10 py-2.5 flex justify-around items-center shadow-[0_-2px_10px_rgba(0,0,0,0.15)] z-20 pb-[calc(10px+env(safe-area-inset-bottom))]">
+        
+        <!-- Tab 1: Lobby -->
+        <button onclick="navigate('home.html', this)" class="nav-btn flex flex-col items-center justify-center w-16 text-booyahOrange transition duration-200">
+            <svg class="w-6 h-6 mb-1 object-contain" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#fca311" d="m56.7 22.3-14-14c-2-2-5.3-2-7.3 0l-19 19C14.8 28.8 14 30.9 14 33v28c0 1.1.9 2 2 2h12c-2.2 0-4-1.8-4-4V41c0-2.2 1.8-4 4-4h8c2.2 0 4 1.8 4 4v3c0-1.1-.9-2-2-2h-7c-1.1 0-2 .9-2 2v17c0 1.1.9 2 2 2h24c2.2 0 4-1.8 4-4V28c0-2.1-.8-4.2-2.3-5.7z"/><path fill="#5e52c4" d="M55 64H28c-2.8 0-5-2.2-5-5V41c0-2.8 2.2-5 5-5h8c2.8 0 5 2.2 5 5v16c0 .6-.4 1-1 1s-1-.4-1-1V41c0-1.7-1.3-3-3-3h-8c-1.7 0-3 1.3-3 3v18c0 1.7 1.3 3 3 3h27c1.7 0 3-1.3 3-3V28c0-1.9-.7-3.6-2-4.9L37 4c-2.7-2.7-7.2-2.7-9.9 0L8 23c-1.3 1.3-2 3.1-2 4.9v31c0 1.7 1.3 3 3 3h9c.6 0 1 .4 1 1s-.4 1-1 1H9c-2.8 0-5-2.2-5-5V28c0-2.4.9-4.7 2.6-6.4l19-19c3.5-3.5 9.2-3.5 12.7 0l19 19c1.7 1.7 2.6 4 2.6 6.4v31c.1 2.8-2.1 5-4.9 5z"/></svg>
+            <span class="text-[8px] font-bold uppercase tracking-wider font-game">Lobby</span>
+        </button>
+
+        <!-- Tab 2: Earn -->
+        <button onclick="navigate('earn.html', this)" class="nav-btn flex flex-col items-center justify-center w-16 text-textDim hover:text-booyahYellow transition duration-200">
+            <img src="images/icon/v2.webp" class="w-6 h-6 mb-1 object-contain" alt="Earn">
+            <span class="text-[8px] font-bold uppercase tracking-wider font-game">Earn</span>
+        </button>
+
+        <!-- Tab 3: Reels (Middle Prominent Action) -->
+        <button onclick="navigate('reels.html', this)" class="nav-btn flex flex-col items-center justify-center w-16 text-textDim hover:text-booyahOrange transition duration-200 group relative">
+            <div class="absolute -top-4 bg-gradient-to-r from-booyahOrange to-booyahYellow text-gameDark rounded-full p-2 shadow-[0_0_15px_rgba(255,107,0,0.5)] group-hover:scale-110 transition-transform flex items-center justify-center">
+                <img src="images/icon/je.webp" class="w-8 h-8 object-contain" alt="Reels">
+            </div>
+            <div class="w-6 h-6 mb-1"></div>
+            <span class="text-[8px] opacity-0 pointer-events-none select-none">Reels</span>
+        </button>
+
+        <!-- Tab 4: Clubs -->
+        <button onclick="navigate('chat.html', this)" class="nav-btn flex flex-col items-center justify-center w-16 text-textDim hover:text-booyahYellow transition duration-200">
+            <img src="images/icon/ts.webp" class="w-6 h-6 mb-1 object-contain" alt="Clubs">
+            <span class="text-[8px] font-bold uppercase tracking-wider font-game">Clubs</span>
+        </button>
+
+        <!-- Tab 5: Account -->
+        <button onclick="navigate('profile.html', this)" class="nav-btn flex flex-col items-center justify-center w-16 text-textDim hover:text-booyahYellow transition duration-200">
+            <img src="images/icon/tv.webp" class="w-6 h-6 mb-1 object-contain" alt="Account">
+            <span class="text-[8px] font-bold uppercase tracking-wider font-game">Account</span>
+        </button>
+    </nav>
+
+    <script>
+        const flashScreen = document.getElementById('flash-screen');
+        const viewport = document.getElementById('app-viewport');
+        const appFrame = document.getElementById('app-frame');
+        const progressBar = document.getElementById('progress-bar');
+        const percentText = document.getElementById('loading-percent');
+        const globalNavbar = document.getElementById('global-navbar');
+
+        const introScreen = document.getElementById('intro-screen');
+        const introLogo = document.getElementById('intro-logo');
+
+        // Splash Loading Progress
+        let progress = 0;
+        let authReady = false;
+        let isAuth = false;
+        window.pendingChatUid = null; // Stores target user UID for redirection
+
+        // Intro Logo Animation -> Then Start Loading (FAST)
+        setTimeout(() => {
+            if (introLogo) {
+                introLogo.style.opacity = '1';
+                introLogo.classList.remove('scale-75');
+                introLogo.classList.add('scale-100');
+            }
+            setTimeout(() => {
+                if (introScreen) introScreen.style.opacity = '0';
+                setTimeout(() => {
+                    if (introScreen) introScreen.remove();
+                    startLoading();
+                }, 400);
+            }, 800); 
+        }, 200); 
+
+        function updateProgress(target, duration, callback) {
+            let start = progress;
+            let increment = (target - start) / (duration / 30);
+            
+            let interval = setInterval(() => {
+                progress += increment;
+                if (progress >= target) {
+                    progress = target;
+                    clearInterval(interval);
+                    if (callback) callback();
+                }
+                progressBar.style.width = `${Math.floor(progress)}%`;
+                percentText.innerText = `${Math.floor(progress)}%`;
+            }, 30);
+        }
+
+        function startLoading() {
+            updateProgress(40, 400, () => {
+                updateProgress(70, 300, () => {
+                    updateProgress(100, 500, () => {
+                        checkAuthAndProceed();
+                    });
+                });
+            });
+        }
+
+        function checkAuthAndProceed() {
+            let waitInterval = setInterval(() => {
+                if (authReady) {
+                    clearInterval(waitInterval);
+                    
+                    if (isAuth) {
+                        appFrame.src = "home.html";
+                        globalNavbar.classList.remove('hidden');
+                        globalNavbar.classList.add('flex');
+                    } else {
+                        appFrame.src = "login.html";
+                        globalNavbar.classList.remove('flex');
+                        globalNavbar.classList.add('hidden');
+                    }
+                    
+                    appFrame.onload = () => {
+                        handleIframeOnload();
+                    };
+                }
+            }, 100);
+        }
+
+        function handleIframeOnload() {
+            if (isAuth && appFrame.src && appFrame.src.indexOf('login.html') === -1) {
+                if (!window.pendingChatUid) {
+                    globalNavbar.classList.remove('hidden');
+                    globalNavbar.classList.add('flex');
+                }
+            }
+
+            // Trigger pending chat redirect if active
+            if (window.pendingChatUid && appFrame.src.indexOf('chat.html') !== -1) {
+                setTimeout(() => {
+                    appFrame.contentWindow.postMessage({ type: 'START_CHAT', targetUid: window.pendingChatUid }, '*');
+                    window.pendingChatUid = null;
+                }, 150);
+            }
+
+            setTimeout(() => {
+                if (flashScreen) {
+                    flashScreen.style.opacity = '0';
+                    flashScreen.style.transform = 'scale(1.08)';
+                    viewport.classList.remove('pointer-events-none');
+                    viewport.style.opacity = '1';
+                    setTimeout(() => flashScreen.remove(), 700);
+                }
+            }, 500);
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                isAuth = true;
+                
+                // RUN SAFEGUARD IN BACKGROUND
+                (async () => {
+                    try {
+                        await new Promise(r => setTimeout(r, 1000));
+                        const iframeSrc = appFrame.src || "";
+                        const isRegistering = iframeSrc.indexOf('register.html') !== -1;
+                        const docRef = db.collection('users').doc(user.uid);
+                        const docSnap = await docRef.get();
+                        
+                        if (docSnap.exists) {
+                            const data = docSnap.data();
+                            if (!data.nickname || !data.uid || !data.avatar) {
+                                await docRef.set({
+                                    nickname: data.nickname || 'GAMER',
+                                    uid: data.uid || (Math.floor(Math.random() * 900000000) + 100000000).toString(),
+                                    avatar: data.avatar || 'images/avatar/default_male.webp',
+                                    dm_limit: data.dm_limit || 100,
+                                    group_limit: data.group_limit || 250,
+                                    channel_limit: data.channel_limit || 500
+                                }, {merge: true});
+                            }
+                        } else if (!isRegistering) {
+                            await docRef.set({
+                                nickname: 'GAMER',
+                                uid: (Math.floor(Math.random() * 900000000) + 100000000).toString(),
+                                avatar: 'images/avatar/default_male.webp',
+                                diamonds: 0,
+                                coins: 0,
+                                dm_limit: 100,
+                                group_limit: 250,
+                                channel_limit: 500
+                            });
+                        }
+                    } catch(e) {
+                        console.error("Auth safeguard failed", e);
+                    }
+                })();
+
+                if (progress >= 100) {
+                    const src = appFrame.src || "";
+                    if (src.indexOf('login.html') !== -1 || src.indexOf('email-login.html') !== -1 || src.endsWith('BOOYAH DAY/') || src === '') {
+                        appFrame.src = "home.html";
+                        globalNavbar.classList.remove('hidden');
+                        globalNavbar.classList.add('flex');
+                    }
+                }
+            } else {
+                isAuth = false;
+                if (progress >= 100) {
+                    const src = appFrame.src || "";
+                    if (src.indexOf('home.html') !== -1 || src.indexOf('profile.html') !== -1 || src.indexOf('earn.html') !== -1 || src.indexOf('tournaments.html') !== -1 || src.indexOf('chat.html') !== -1) {
+                        appFrame.src = "login.html";
+                        globalNavbar.classList.remove('flex');
+                        globalNavbar.classList.add('hidden');
+                    }
+                }
+            }
+            authReady = true;
+        });
+
+        window.navigate = function(page, btnElement) {
+            appFrame.src = page;
+            if (btnElement) {
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('text-booyahOrange');
+                    btn.classList.add('text-textDim');
+                });
+                btnElement.classList.remove('text-textDim');
+                btnElement.classList.add('text-booyahOrange');
+            }
+        };
+
+        window.addEventListener('message', async (event) => {
+            const data = event.data;
+            if (data && data.type === 'NAVIGATE') {
+                appFrame.src = data.route;
+            } else if (data && data.type === 'LOGOUT') {
+                try {
+                    await auth.signOut();
+                } catch (error) {
+                    console.error("Logout Error", error);
+                }
+            } else if (data && data.type === 'HIDE_NAVBAR') {
+                globalNavbar.classList.remove('flex');
+                globalNavbar.classList.add('hidden');
+            } else if (data && data.type === 'SHOW_NAVBAR') {
+                globalNavbar.classList.remove('hidden');
+                globalNavbar.classList.add('flex');
+            } else if (data && data.type === 'START_CHAT') {
+                window.pendingChatUid = data.targetUid;
+                const clubsBtn = document.querySelector('[onclick*="chat.html"]');
+                window.navigate('chat.html', clubsBtn);
+            } else if (data && data.type === 'NAVIGATE_LOBBY') {
+                globalNavbar.classList.remove('hidden');
+                globalNavbar.classList.add('flex');
+                const lobbyBtn = document.querySelector('[onclick*="home.html"]');
+                window.navigate('home.html', lobbyBtn);
+            }
+        });
+    </script>
+</body>
+</html>

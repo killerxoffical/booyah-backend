@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>BOOYAH - Account Settings</title>
+    <link rel="icon" type="image/png" href="images/app-logo.webp">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Teko:wght@700&display=swap" rel="stylesheet">
+
+    <!-- Theme engine — MUST load before Tailwind -->
+    <script src="theme.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gameDark: 'rgb(var(--bg-primary-rgb) / <alpha-value>)',
+                        gameCard: 'rgb(var(--bg-card-rgb) / <alpha-value>)',
+                        gameCardLight: 'rgb(var(--bg-card-light-rgb) / <alpha-value>)',
+                        booyahOrange: '#FF6B00',
+                        booyahYellow: '#FFCC00',
+                        fireRed: '#E30052',
+                        cyberBlue: '#00F0FF',
+                        textDim: 'rgb(var(--text-dim-rgb) / <alpha-value>)',
+                        tPrimary: 'rgb(var(--text-primary-rgb) / <alpha-value>)',
+                        tBorder: 'rgb(var(--border-color-rgb) / <alpha-value>)'
+                    },
+                    fontFamily: {
+                        game: ['Inter', 'sans-serif'],
+                        ff: ['Teko', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: rgb(var(--bg-primary-rgb)); color: rgb(var(--text-primary-rgb)); font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .sub-panel { position: absolute; inset: 0; width: 100%; height: 100%; background: rgb(var(--bg-primary-rgb)); z-index: 40; transition: transform 0.3s ease-out; }
+        .font-ff { font-family: 'Teko', sans-serif; text-transform: uppercase; }
+    </style>
+</head>
+<body class="w-screen h-screen relative select-none overflow-hidden pb-10">
+
+    <!-- ★ PREMIUM TOAST NOTIFICATION SYSTEM ★ -->
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center gap-2 pointer-events-none w-[90%] max-w-sm"></div>
+
+    <!-- ================== ১. MAIN PROFILE VIEW ================== -->
+    <!-- ★ Skeleton Loading State ★ -->
+    <div id="skeleton-view" class="w-full h-full p-4 overflow-y-auto space-y-5 no-scrollbar">
+        <div class="w-full h-36 skeleton rounded-2xl"></div>
+        <div class="space-y-2.5 pt-2">
+            <div class="w-full h-14 skeleton rounded-xl"></div>
+            <div class="w-full h-14 skeleton rounded-xl"></div>
+            <div class="w-full h-14 skeleton rounded-xl"></div>
+        </div>
+    </div>
+
+    <div id="main-profile-view" class="hidden opacity-0 w-full h-full flex flex-col overflow-y-auto no-scrollbar">
+        
+        <!-- ★ FREE FIRE STYLE BANNER PROFILE HEADER ★ -->
+        <div id="main-profile-banner" class="w-full shrink-0 relative bg-gradient-to-br from-[#ffb900] via-[#ff8c00] to-[#ff4b00] border-b-[3px] border-[#cc3c00] overflow-hidden p-5 shadow-none">
+            <!-- Booyah Day Watermark Background (Ensured Display with Fallback) -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                <img src="images/others/booyah_day.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free%20fire/booyah_day.png';" class="w-[90%] max-w-sm h-auto object-contain opacity-40 drop-shadow-md">
+            </div>
+            <!-- Light Glow effect -->
+            <div class="absolute -top-12 -left-12 w-48 h-48 bg-white/25 blur-3xl rounded-full pointer-events-none z-0"></div>
+
+            <!-- Top Right Action Icons (Gender Icon Left, Settings Icon h4.webp Right) -->
+            <div class="absolute top-3 right-3 z-30 flex items-center gap-2">
+                <!-- Gender Icon (q4.webp for Male, q1.webp for Female) -->
+                <div class="w-7 h-7 rounded-lg bg-black/30 border border-white/20 backdrop-blur-sm flex items-center justify-center p-1 shadow-sm">
+                    <img id="profile-gender-icon" src="images/icon/q4.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free%20fire/1780775840537_1780775826525.png';" class="w-full h-full object-contain" alt="Gender">
+                </div>
+
+                <!-- Settings Icon (h4.webp) -->
+                <button onclick="openPanel('privacy-panel')" class="w-7 h-7 rounded-lg bg-black/30 border border-white/20 backdrop-blur-sm flex items-center justify-center p-1 hover:bg-black/50 active:scale-90 transition-all shadow-sm" title="Account & Security">
+                    <img src="images/icon/h4.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free%20fire/1780775840537_1780775826525.png';" class="w-full h-full object-contain" alt="Settings">
+                </button>
+            </div>
+
+            <div class="relative z-10 flex flex-col w-full gap-2.5 pt-1">
+                <!-- Top Row: Avatar + Gamer Details -->
+                <div class="flex items-center gap-4">
+                    <!-- Avatar in Free Fire style dark box -->
+                    <div class="relative shrink-0">
+                        <div id="main-avatar-container" class="w-[64px] h-[64px] rounded-xl p-[1.5px] shadow-[0_0_15px_rgba(255,185,0,0.3)] bg-gradient-to-b from-[#ffb900] to-[#ff4b00]">
+                            <img id="profile-avatar" src="images/avatar/default_male.webp" class="w-full h-full object-cover rounded-[10px] bg-black border border-black">
+                        </div>
+                    </div>
+
+                    <!-- User Info (Full Pure White Text Guaranteed) -->
+                    <div class="flex flex-col justify-center flex-1 min-w-0">
+                        <span id="profile-nickname" style="color: #ffffff !important;" class="font-ff text-[22px] leading-none font-bold tracking-wider truncate uppercase drop-shadow-md">...</span>
+                        
+                        <div class="flex items-center gap-1.5 mt-1.5">
+                            <span id="profile-user-uid" style="color: #ffffff !important;" class="font-ff text-[14px] tracking-widest drop-shadow-sm font-bold">UID: ---</span>
+                            <button id="btn-copy-uid" class="hover:text-gray-200 transition-colors p-1 -m-1 text-white" title="Copy UID">
+                                <svg class="w-4 h-4 drop-shadow-sm" viewBox="0 0 32 32" fill="none">
+                                    <rect width="24" height="24" x="1" y="7" rx="3.2" ry="3.2" fill="currentColor" />
+                                    <path d="M27.8 1H10.2A3.21 3.21 0 0 0 7 4.2V6h15.53A3.48 3.48 0 0 1 26 9.47V25h1.8a3.21 3.21 0 0 0 3.2-3.2V4.2A3.21 3.21 0 0 0 27.8 1Z" fill="currentColor" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reserved Stats Row Space -->
+                <div class="w-full h-6"></div>
+            </div>
+        </div>
+
+        <!-- ★ Menu Options Container ★ -->
+        <div class="p-4 space-y-0.5">
+
+            <!-- Wallet (o2.webp) -->
+            <button onclick="openPanel('wallet-panel')" class="w-full py-4 px-2 flex items-center justify-between text-left transition-all active:scale-[0.97] border-b border-tBorder/10 group hover:bg-tBorder/5">
+                <div class="flex items-center gap-4">
+                    <img src="images/icon/o2.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/1781939603713_animation_original.png';" class="w-6 h-6 object-contain drop-shadow-sm" alt="Wallet">
+                    <span class="text-[13px] font-bold text-tPrimary font-game tracking-wide">Wallet</span>
+                </div>
+                <svg class="w-4 h-4 text-textDim/50 group-hover:text-tPrimary transition-all" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+
+            <!-- Vault (sm.webp) -->
+            <button onclick="navigateVault()" class="w-full py-4 px-2 flex items-center justify-between text-left transition-all active:scale-[0.97] border-b border-tBorder/10 group hover:bg-tBorder/5">
+                <div class="flex items-center gap-4">
+                    <img src="images/icon/sm.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free%20fire/1780775687157_1780775598577.png';" class="w-6 h-6 object-contain drop-shadow-sm" alt="Vault">
+                    <span class="text-[13px] font-bold text-tPrimary font-game tracking-wide">Vault</span>
+                </div>
+                <svg class="w-4 h-4 text-textDim/50 group-hover:text-tPrimary transition-all" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+
+            <!-- Rewards (o0.webp) -->
+            <button onclick="openPanel('rewards-panel')" class="w-full py-4 px-2 flex items-center justify-between text-left transition-all active:scale-[0.97] border-b border-tBorder/10 group hover:bg-tBorder/5">
+                <div class="flex items-center gap-4">
+                    <img src="images/icon/o0.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/1781939985367_animation_original_3_.png';" class="w-6 h-6 object-contain drop-shadow-sm" alt="Rewards">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[13px] font-bold text-tPrimary font-game tracking-wide">Rewards</span>
+                        <span class="bg-[#111111] text-[#FFA000] text-[9px] font-black px-1.5 py-0.5 rounded shadow-sm italic uppercase tracking-wider -skew-x-12">NEW</span>
+                    </div>
+                </div>
+                <svg class="w-4 h-4 text-textDim/50 group-hover:text-tPrimary transition-all" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+
+            <!-- Notification Centre (nz.webp) -->
+            <button onclick="openNotifPanel()" class="w-full py-4 px-2 flex items-center justify-between text-left transition-all active:scale-[0.97] border-b border-tBorder/10 group hover:bg-tBorder/5">
+                <div class="flex items-center gap-4">
+                    <img src="images/icon/nz.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free%20fire/1780775840537_1780775826525.png';" class="w-6 h-6 object-contain drop-shadow-sm" alt="Notifications">
+                    <span class="text-[13px] font-bold text-tPrimary font-game tracking-wide">Notification Centre</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="global-notif-badge" class="bg-fireRed text-white text-[9px] px-2 py-0.5 rounded-full font-bold hidden shadow-sm">0</span>
+                    <svg class="w-4 h-4 text-textDim/50 group-hover:text-tPrimary transition-all" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </button>
+
+            <!-- Blocked Users (d7.webp) -->
+            <button onclick="openPanel('block-panel')" class="w-full py-4 px-2 flex items-center justify-between text-left transition-all active:scale-[0.97] border-b border-tBorder/10 group hover:bg-tBorder/5">
+                <div class="flex items-center gap-4">
+                    <img src="images/icon/d7.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free%20fire/1780775840537_1780775826525.png';" class="w-6 h-6 object-contain drop-shadow-sm" alt="Blocked Users">
+                    <span class="text-[13px] font-bold text-tPrimary font-game tracking-wide">Blocked Users</span>
+                </div>
+                <svg class="w-4 h-4 text-textDim/50 group-hover:text-tPrimary transition-all" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+
+            <!-- Account & Security (tk.webp) -->
+            <button onclick="openPanel('privacy-panel')" class="w-full py-4 px-2 flex items-center justify-between text-left transition-all active:scale-[0.97] group hover:bg-tBorder/5">
+                <div class="flex items-center gap-4">
+                    <img src="images/icon/tk.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free%20fire/1780775840537_1780775826525.png';" class="w-6 h-6 object-contain drop-shadow-sm" alt="Account & Security">
+                    <span class="text-[13px] font-bold text-tPrimary font-game tracking-wide">Account & Security</span>
+                </div>
+                <svg class="w-4 h-4 text-textDim/50 group-hover:text-tPrimary transition-all" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+
+        <!-- LOGOUT — Premium Red Button -->
+        <div class="pt-3 pb-6 flex justify-center">
+            <button onclick="logout()" class="px-8 py-2.5 bg-gradient-to-r from-fireRed/10 to-red-900/10 border border-fireRed/30 text-fireRed font-game font-bold text-xs tracking-wider uppercase hover:bg-fireRed/15 active:scale-95 rounded-xl transition-all flex items-center gap-2.5 shadow-[0_0_15px_rgba(227,0,82,0.1)] hover:shadow-[0_0_20px_rgba(227,0,82,0.2)]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+                LOGOUT
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ================== ২. My Wallet Panel ================== -->
+    <div id="wallet-panel" class="sub-panel translate-x-full flex flex-col justify-between">
+        <header class="w-full bg-gameCard border-b border-booyahOrange/10 px-4 py-3 flex items-center gap-3.5 shadow-md">
+            <button onclick="closePanel('wallet-panel')" class="w-8 h-8 rounded-lg bg-gameDark border border-tBorder/5 flex items-center justify-center text-textDim hover:text-tPrimary transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <h2 class="font-game font-black text-sm text-tPrimary tracking-wide uppercase">GAMER WALLET</h2>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-5 no-scrollbar">
+            <!-- Account Balance overview -->
+            <div class="bg-gameCard p-5 rounded-xl border border-tBorder/5 flex justify-around items-center">
+                <div class="text-center">
+                    <span class="text-[9px] font-bold text-textDim tracking-wider font-game block">DIAMONDS</span>
+                    <span id="wallet-diamonds" class="text-xl font-game font-black text-cyberBlue flex items-center justify-center gap-1 mt-1"><img src="images/currency/diamond.webp" class="w-5 h-5 object-contain"> ...</span>
+                </div>
+                <div class="w-[1px] h-10 bg-tBorder/10"></div>
+                <div class="text-center">
+                    <span class="text-[9px] font-bold text-textDim tracking-wider font-game block">COINS</span>
+                    <span id="wallet-coins" class="text-xl font-game font-black text-booyahYellow flex items-center justify-center gap-1 mt-1"><img src="images/currency/coin.webp" class="w-5 h-5 object-contain"> ...</span>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="mt-6">
+                <h3 class="font-game font-bold text-xs text-textDim tracking-widest uppercase mb-4 pl-1">TRANSACTION HISTORY</h3>
+                <div id="transaction-list" class="space-y-3">
+                    <div class="w-full py-8 flex flex-col items-center justify-center opacity-50">
+                        <svg class="w-8 h-8 text-tBorder mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span class="font-game text-[9px] uppercase tracking-widest text-textDim">Loading History...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================== ৪. Reward Vault Panel ================== -->
+    <div id="rewards-panel" class="sub-panel translate-x-full flex flex-col justify-between">
+        <header class="w-full bg-gameCard border-b border-booyahOrange/10 px-4 py-3 flex items-center gap-3.5 shadow-md">
+            <button onclick="closePanel('rewards-panel')" class="w-8 h-8 rounded-lg bg-gameDark border border-tBorder/5 flex items-center justify-center text-textDim hover:text-tPrimary transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <h2 class="font-game font-black text-sm text-tPrimary tracking-wide uppercase">REWARD VAULT</h2>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-5 no-scrollbar">
+            <!-- Promo Code Redeem -->
+            <div class="bg-gameCard p-4 rounded-xl border border-tBorder/5 space-y-3">
+                <h3 class="font-game font-bold text-xs text-booyahYellow uppercase">REDEEM ARENA CODE</h3>
+                <div class="flex gap-2">
+                    <input type="text" placeholder="ENTER PROMO CODE" class="flex-1 bg-gameDark border border-booyahOrange/20 focus:border-booyahOrange text-sm px-4 py-2 rounded-lg text-tPrimary outline-none font-medium uppercase placeholder:text-textDim">
+                    <button onclick="alert('Redeem code applied!')" class="bg-booyahOrange text-gameDark font-game font-black text-xs px-4 py-2 rounded-lg">REDEEM</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================== ৫. Notifications Panel ================== -->
+    <div id="notif-panel" class="sub-panel translate-x-full flex flex-col justify-between">
+        <header class="w-full bg-gameCard border-b border-booyahOrange/10 px-4 py-3 flex items-center gap-3.5 shadow-md">
+            <button onclick="closePanel('notif-panel')" class="w-8 h-8 rounded-lg bg-gameDark border border-tBorder/5 flex items-center justify-center text-textDim hover:text-tPrimary transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <h2 class="font-game font-black text-sm text-tPrimary tracking-wide uppercase">NOTIFICATIONS</h2>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar" id="global-notif-list">
+            <!-- Empty state -->
+            <div class="h-full w-full flex flex-col items-center justify-center opacity-50 mt-10" id="empty-notifs">
+                <svg class="w-10 h-10 text-tBorder mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                <span class="font-game font-bold text-[10px] text-textDim uppercase tracking-widest">NO NOTIFICATIONS YET</span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================== ৬. Block User Panel ================== -->
+    <div id="block-panel" class="sub-panel translate-x-full flex flex-col justify-between">
+        <header class="w-full bg-gameCard border-b border-booyahOrange/10 px-4 py-3 flex items-center gap-3.5 shadow-md">
+            <button onclick="closePanel('block-panel')" class="w-8 h-8 rounded-lg bg-gameDark border border-tBorder/5 flex items-center justify-center text-textDim hover:text-tPrimary transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <h2 class="font-game font-black text-sm text-tPrimary tracking-wide uppercase">BLOCKED PLAYERS</h2>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-5 no-scrollbar">
+            <!-- Blocked Users list -->
+            <div class="space-y-3">
+                <h3 class="font-game font-black text-xs text-textDim uppercase tracking-wider">BLOCKED GAMERS</h3>
+                <div id="blocked-list" class="space-y-2">
+                    <!-- Empty State -->
+                    <div class="flex flex-col items-center justify-center opacity-50 mt-6" id="empty-blocked">
+                        <span class="font-game font-bold text-[10px] text-textDim uppercase tracking-widest">NO BLOCKED USERS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================== ৭. Account & Security Panel ================== -->
+    <div id="privacy-panel" class="sub-panel translate-x-full flex flex-col justify-between">
+        <header class="w-full bg-gameCard border-b border-booyahOrange/10 px-4 py-3 flex items-center gap-3.5 shadow-md">
+            <button onclick="closePanel('privacy-panel')" class="w-8 h-8 rounded-lg bg-gameDark border border-tBorder/5 flex items-center justify-center text-textDim hover:text-tPrimary transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <h2 class="font-game font-black text-sm text-tPrimary tracking-wide uppercase">ACCOUNT & SECURITY</h2>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-5 no-scrollbar">
+            <!-- Account Details -->
+            <div class="bg-gameCard p-4 rounded-xl border border-tBorder/5 space-y-4">
+                <h3 class="font-game font-bold text-xs text-cyberBlue uppercase">ACCOUNT DETAILS</h3>
+                
+                <div class="space-y-1">
+                    <label class="text-[10px] text-textDim font-bold font-game tracking-wider">REGISTERED EMAIL</label>
+                    <input type="email" id="privacy-email" readonly class="w-full bg-gameDark border border-tBorder/10 text-xs px-3 py-2.5 rounded-lg text-textDim outline-none opacity-60 font-medium">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] text-textDim font-bold font-game tracking-wider">GAMER NICKNAME</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="privacy-nickname" class="flex-1 bg-gameDark border border-booyahOrange/30 focus:border-booyahOrange text-xs px-3 py-2.5 rounded-lg text-tPrimary outline-none font-medium">
+                        <button onclick="updateNickname()" class="bg-gradient-to-r from-booyahOrange to-booyahYellow text-gameDark font-game font-black text-[10px] px-4 py-2.5 rounded-lg shrink-0 tracking-wider shadow-sm active:scale-95 transition">SAVE</button>
+                    </div>
+                </div>
+
+                <!-- Gender Selection -->
+                <div class="space-y-1 pt-1">
+                    <label class="text-[10px] text-textDim font-bold font-game tracking-wider">GENDER</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="updateGender('male')" id="gender-btn-male" class="py-2.5 px-3 bg-gameDark border border-tBorder/10 rounded-lg flex items-center justify-center gap-2 text-xs font-bold font-game text-tPrimary active:scale-95 transition">
+                            <img src="images/icon/q4.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free%20fire/1780775840537_1780775826525.png';" class="w-4 h-4 object-contain"> MALE
+                        </button>
+                        <button onclick="updateGender('female')" id="gender-btn-female" class="py-2.5 px-3 bg-gameDark border border-tBorder/10 rounded-lg flex items-center justify-center gap-2 text-xs font-bold font-game text-tPrimary active:scale-95 transition">
+                            <img src="images/icon/q1.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free%20fire/1780775840537_1780775826525.png';" class="w-4 h-4 object-contain"> FEMALE
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password Management -->
+            <div class="bg-gameCard p-4 rounded-xl border border-tBorder/5 space-y-4">
+                <h3 class="font-game font-bold text-xs text-fireRed uppercase">CHANGE PASSWORD</h3>
+                
+                <div class="space-y-2.5">
+                    <input type="password" id="old-pass" placeholder="OLD PASSWORD" class="w-full bg-gameDark border border-tBorder/10 focus:border-fireRed text-xs px-3 py-2.5 rounded-lg text-tPrimary outline-none font-medium placeholder:text-textDim">
+                    <input type="password" id="new-pass" placeholder="NEW PASSWORD" class="w-full bg-gameDark border border-tBorder/10 focus:border-fireRed text-xs px-3 py-2.5 rounded-lg text-tPrimary outline-none font-medium placeholder:text-textDim">
+                    <input type="password" id="confirm-pass" placeholder="CONFIRM NEW PASSWORD" class="w-full bg-gameDark border border-tBorder/10 focus:border-fireRed text-xs px-3 py-2.5 rounded-lg text-tPrimary outline-none font-medium placeholder:text-textDim">
+                    
+                    <button onclick="changePassword()" class="w-full bg-gradient-to-r from-booyahOrange to-booyahYellow text-gameDark font-game font-black tracking-widest text-[10px] px-3 py-3 rounded-lg mt-1 active:scale-95 transition-all shadow-[0_0_15px_rgba(255,107,0,0.2)]">UPDATE PASSWORD</button>
+                </div>
+
+                <div class="relative flex items-center py-2">
+                    <div class="flex-grow border-t border-tBorder/10"></div>
+                    <span class="flex-shrink-0 mx-4 text-[9px] text-textDim font-game font-bold uppercase tracking-widest">OR</span>
+                    <div class="flex-grow border-t border-tBorder/10"></div>
+                </div>
+
+                <button onclick="sendPasswordReset()" class="w-full bg-gameDark border border-fireRed/30 text-fireRed hover:bg-fireRed/10 font-game font-black text-[10px] tracking-widest px-3 py-3 rounded-lg transition-all active:scale-95">SEND RESET LINK TO EMAIL</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================== ৮. SCRIPTS FOR CONTROL ================== -->
+    <script>
+        function navigateVault() {
+            window.parent.postMessage({ type: 'NAVIGATE', route: 'vault.html' }, '*');
+        }
+
+        // --------- ★ PREMIUM TOAST SYSTEM ★ ---------
+        function showToast(message, type = 'success', duration = 3000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'pointer-events-auto';
+            
+            const colors = {
+                success: { border: 'border-emerald-400/40', bg: 'from-emerald-500/15 to-emerald-900/10', text: 'text-emerald-300', icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>', glow: 'shadow-[0_0_20px_rgba(16,185,129,0.2)]' },
+                error:   { border: 'border-fireRed/40', bg: 'from-fireRed/15 to-red-900/10', text: 'text-red-300', icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>', glow: 'shadow-[0_0_20px_rgba(227,0,82,0.2)]' },
+                info:    { border: 'border-cyberBlue/40', bg: 'from-cyberBlue/15 to-blue-900/10', text: 'text-cyan-300', icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>', glow: 'shadow-[0_0_20px_rgba(0,240,255,0.2)]' },
+                warning: { border: 'border-booyahOrange/40', bg: 'from-booyahOrange/15 to-orange-900/10', text: 'text-orange-300', icon: '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>', glow: 'shadow-[0_0_20px_rgba(255,107,0,0.2)]' }
+            };
+            const c = colors[type] || colors.success;
+
+            toast.innerHTML = `
+                <div class="bg-gradient-to-r ${c.bg} backdrop-blur-md border ${c.border} rounded-xl px-4 py-3 flex items-center gap-3 ${c.glow} transform translate-y-[-20px] opacity-0 transition-all duration-300" style="min-width:200px;">
+                    <div class="${c.text} shrink-0">${c.icon}</div>
+                    <p class="text-[11px] font-bold ${c.text} flex-1 font-game tracking-wide leading-snug">${message}</p>
+                    <button onclick="this.closest('[class*=pointer-events-auto]').remove()" class="${c.text} opacity-50 hover:opacity-100 shrink-0">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                const inner = toast.querySelector('div');
+                if (inner) {
+                    inner.style.transform = 'translateY(0)';
+                    inner.style.opacity = '1';
+                }
+            });
+
+            setTimeout(() => {
+                const inner = toast.querySelector('div');
+                if (inner) {
+                    inner.style.transform = 'translateY(-20px)';
+                    inner.style.opacity = '0';
+                }
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // --------- Panel Control ---------
+        function openPanel(id) {
+            const panel = document.getElementById(id);
+            if (panel) {
+                window.parent.postMessage({ type: 'HIDE_NAVBAR' }, '*');
+                panel.classList.remove('translate-x-full');
+            }
+        }
+
+        function closePanel(id) {
+            const panel = document.getElementById(id);
+            if (panel) {
+                panel.classList.add('translate-x-full');
+                window.parent.postMessage({ type: 'SHOW_NAVBAR' }, '*');
+            }
+        }
+
+        async function unblockUser(uid, nickname) {
+            if(!auth.currentUser) return;
+            if(!confirm(`Are you sure you want to unblock ${nickname}?`)) return;
+            try {
+                await db.collection('users').doc(auth.currentUser.uid).collection('blocked_users').doc(uid).delete();
+                showToast(`Unblocked ${nickname}`, 'success');
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function updateNickname() {
+            const input = document.getElementById('privacy-nickname');
+            const newName = input.value.trim();
+            if(newName === '') return;
+            if(!auth.currentUser) return;
+            
+            try {
+                await db.collection('users').doc(auth.currentUser.uid).update({ nickname: newName });
+                showToast('Nickname updated!', 'success');
+            } catch(e) {
+                console.error(e);
+                showToast('Failed to update nickname', 'error');
+            }
+        }
+
+        async function updateGender(genderVal) {
+            if(!auth.currentUser) return;
+            try {
+                await db.collection('users').doc(auth.currentUser.uid).update({ gender: genderVal });
+                const genderIcon = document.getElementById('profile-gender-icon');
+                if (genderIcon) {
+                    genderIcon.src = genderVal === 'female' ? 'images/icon/q1.webp' : 'images/icon/q4.webp';
+                }
+                showToast('Gender updated!', 'success');
+            } catch(e) {
+                showToast('Failed to update gender', 'error');
+            }
+        }
+
+        async function changePassword() {
+            const oldP = document.getElementById('old-pass').value;
+            const newP = document.getElementById('new-pass').value;
+            const confP = document.getElementById('confirm-pass').value;
+            if(!oldP || !newP || !confP) { showToast('Fill all password fields', 'warning'); return; }
+            if(newP !== confP) { showToast('Passwords do not match', 'error'); return; }
+            if(!auth.currentUser) return;
+
+            try {
+                const cred = firebase.auth.EmailAuthProvider.credential(auth.currentUser.email, oldP);
+                await auth.currentUser.reauthenticateWithCredential(cred);
+                await auth.currentUser.updatePassword(newP);
+                showToast('Password updated!', 'success');
+                document.getElementById('old-pass').value = '';
+                document.getElementById('new-pass').value = '';
+                document.getElementById('confirm-pass').value = '';
+            } catch(e) {
+                console.error(e);
+                showToast(e.message || 'Failed to update password', 'error');
+            }
+        }
+
+        async function sendPasswordReset() {
+            if(!auth.currentUser || !auth.currentUser.email) return;
+            try {
+                await auth.sendPasswordResetEmail(auth.currentUser.email);
+                showToast('Reset link sent to email!', 'success');
+            } catch(e) {
+                console.error(e);
+                showToast(e.message || 'Failed to send reset link', 'error');
+            }
+        }
+
+        async function openNotifPanel() {
+            openPanel('notif-panel');
+            if(!auth.currentUser) return;
+            await db.collection('users').doc(auth.currentUser.uid).set({
+                lastSeenNotifTime: firebase.firestore.FieldValue.serverTimestamp()
+            }, {merge: true});
+            document.getElementById('global-notif-badge').classList.add('hidden');
+            document.getElementById('global-notif-badge').innerText = '0';
+        }
+
+        function logout() {
+            window.parent.postMessage({ type: 'LOGOUT' }, '*');
+        }
+    </script>
+
+    <script>
+        let unreadNotifCount = 0;
+        let myLastSeenNotifTime = null;
+
+        setTimeout(() => {
+            hideLoader();
+        }, 5000);
+
+        function hideLoader() {
+            const skeleton = document.getElementById('skeleton-view');
+            const content = document.getElementById('main-profile-view');
+            
+            if (skeleton && content) {
+                skeleton.remove();
+                content.classList.remove('hidden', 'opacity-0');
+                content.classList.add('row-animate');
+            }
+        }
+
+        function applyUserData(data, email) {
+            const nickEl = document.getElementById('profile-nickname');
+            if(nickEl) {
+                nickEl.textContent = data.nickname || 'GAMER';
+                nickEl.style.setProperty('color', '#ffffff', 'important');
+            }
+            
+            // Renamed ID to profile-user-uid to bypass theme.js override
+            const uidEl = document.getElementById('profile-user-uid');
+            if(uidEl) {
+                uidEl.textContent = 'UID: ' + (data.uid || '---');
+                uidEl.style.setProperty('color', '#ffffff', 'important');
+            }
+
+            const pEmail = document.getElementById('privacy-email');
+            if(pEmail && email) pEmail.value = email;
+
+            const pNick = document.getElementById('privacy-nickname');
+            if(pNick && document.activeElement !== pNick) pNick.value = data.nickname || '';
+
+            // Update Gender Icon (q4.webp for male, q1.webp for female)
+            const genderIcon = document.getElementById('profile-gender-icon');
+            if (genderIcon) {
+                const isFemale = (data.gender || '').toLowerCase() === 'female';
+                genderIcon.src = isFemale ? 'images/icon/q1.webp' : 'images/icon/q4.webp';
+            }
+            
+            const copyBtn = document.getElementById('btn-copy-uid');
+            if(copyBtn && data.uid) {
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(data.uid);
+                    if(typeof showToast === 'function') showToast('UID Copied!', 'success', 1500);
+                };
+            }
+
+            const avatarEl = document.getElementById('profile-avatar');
+            if (avatarEl && data.avatar) {
+                avatarEl.src = data.avatar;
+            }
+
+            const diaVal = data.diamonds !== undefined ? Number(data.diamonds).toLocaleString() : '0';
+            const coinVal = data.coins !== undefined ? Number(data.coins).toLocaleString() : '0';
+
+            const wDia = document.getElementById('wallet-diamonds');
+            if(wDia) wDia.innerHTML = `<img src="images/currency/diamond.webp" class="w-5 h-5 object-contain"> ${diaVal}`;
+            
+            const wCoin = document.getElementById('wallet-coins');
+            if(wCoin) wCoin.innerHTML = `<img src="images/currency/coin.webp" class="w-5 h-5 object-contain"> ${coinVal}`;
+
+            myLastSeenNotifTime = data.lastSeenNotifTime || null;
+        }
+
+        function saveToCache(data, email) {
+            try {
+                const cache = {
+                    nickname: data.nickname || '',
+                    uid: data.uid || '',
+                    gender: data.gender || 'male',
+                    avatar: data.avatar || '',
+                    diamonds: data.diamonds || 0,
+                    coins: data.coins || 0,
+                    email: email || ''
+                };
+                localStorage.setItem('booyah_profile_cache', JSON.stringify(cache));
+            } catch(e) { /* ignore storage errors */ }
+        }
+
+        try {
+            const cached = JSON.parse(localStorage.getItem('booyah_profile_cache'));
+            if (cached && cached.nickname) {
+                applyUserData(cached, cached.email);
+                hideLoader();
+            }
+        } catch(e) { }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                const userRef = db.collection('users').doc(user.uid);
+                
+                userRef.onSnapshot((docSnap) => {
+                    if (docSnap.exists) {
+                        const data = docSnap.data();
+                        applyUserData(data, user.email);
+                        saveToCache(data, user.email);
+                    } else {
+                        userRef.set({
+                            nickname: 'GAMER',
+                            uid: (Math.floor(Math.random() * 900000000) + 100000000).toString(),
+                            avatar: 'images/avatar/default_male.webp',
+                            gender: 'male',
+                            diamonds: 0,
+                            coins: 0
+                        }).catch(e => console.error('[Profile] Failed to recreate user doc:', e));
+                    }
+                    hideLoader();
+                }, (error) => {
+                    console.error('[Profile] User data listener error:', error.message);
+                    hideLoader();
+                });
+
+                db.collection('users').doc(user.uid).collection('transactions')
+                  .orderBy('timestamp', 'desc').limit(20)
+                  .onSnapshot(snap => {
+                      const list = document.getElementById('transaction-list');
+                      if(!list) return;
+                      
+                      if (snap.empty) {
+                          list.innerHTML = `
+                              <div class="w-full py-8 flex flex-col items-center justify-center opacity-50">
+                                  <svg class="w-8 h-8 text-tBorder mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                  <span class="font-game text-[9px] uppercase tracking-widest text-textDim">No transactions yet</span>
+                              </div>
+                          `;
+                          return;
+                      }
+                      
+                      let html = '';
+                      snap.forEach(doc => {
+                          const trx = doc.data();
+                          const isDiamond = trx.currency === 'diamonds';
+                          const color = isDiamond ? 'text-cyberBlue' : 'text-booyahYellow';
+                          const img = isDiamond ? 'diamond.webp' : 'coin.webp';
+                          const dateObj = trx.timestamp ? trx.timestamp.toDate() : new Date();
+                          
+                          const isToday = new Date().toDateString() === dateObj.toDateString();
+                          const dateStr = isToday ? 'TODAY' : dateObj.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+                          const timeStr = dateObj.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+                          
+                          html += `
+                            <div class="bg-gameDark/60 border border-tBorder/5 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-gameCard border border-tBorder/10 flex items-center justify-center shrink-0">
+                                        <img src="images/currency/${img}" class="w-6 h-6 object-contain">
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-xs font-black font-game text-tPrimary tracking-wider uppercase">${trx.title || 'Reward'}</span>
+                                        <span class="text-[9px] text-textDim font-bold font-game tracking-widest mt-0.5">${dateStr} • ${timeStr}</span>
+                                    </div>
+                                </div>
+                                <div class="text-base font-black font-game ${color} tracking-wider flex items-center gap-1">
+                                    +${trx.amount}
+                                </div>
+                            </div>
+                          `;
+                      });
+                      list.innerHTML = html;
+                  }, error => {
+                      console.error("Error loading transactions:", error);
+                  });
+
+                db.collection('notifications').orderBy('timestamp', 'desc').limit(20).onSnapshot(snap => {
+                    const notifList = document.getElementById('global-notif-list');
+                    const badge = document.getElementById('global-notif-badge');
+                    if(!notifList) return;
+
+                    if(snap.empty) {
+                        notifList.innerHTML = `
+                            <div class="h-full w-full flex flex-col items-center justify-center opacity-50 mt-10" id="empty-notifs">
+                                <svg class="w-10 h-10 text-tBorder mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                <span class="font-game font-bold text-[10px] text-textDim uppercase tracking-widest">NO NOTIFICATIONS YET</span>
+                            </div>`;
+                        return;
+                    }
+
+                    let newCount = 0;
+                    notifList.innerHTML = '';
+                    snap.forEach(doc => {
+                        const d = doc.data();
+                        
+                        if(d.timestamp && myLastSeenNotifTime) {
+                            if(d.timestamp.toMillis() > myLastSeenNotifTime.toMillis()) newCount++;
+                        } else if (!myLastSeenNotifTime) {
+                            newCount++;
+                        }
+
+                        const imgHTML = d.imageUrl ? `<img src="${d.imageUrl}" class="w-full h-auto mt-3 rounded-lg border border-tBorder/10 object-cover">` : '';
+                        const dateStr = d.timestamp ? new Date(d.timestamp.toMillis()).toLocaleString() : 'Just now';
+
+                        notifList.innerHTML += `
+                            <div class="bg-gameCard border border-tBorder/5 p-4 rounded-xl shadow-md">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="w-6 h-6 rounded bg-booyahOrange/20 flex items-center justify-center border border-booyahOrange/30 shrink-0">
+                                        <svg class="w-3.5 h-3.5 text-booyahOrange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                                    </div>
+                                    <span class="text-[9px] font-bold text-textDim tracking-widest font-game uppercase">SYSTEM MESSAGE</span>
+                                    <span class="text-[8px] text-textDim/70 ml-auto font-medium">${dateStr}</span>
+                                </div>
+                                <p class="text-xs text-tPrimary/90 leading-relaxed">${d.message}</p>
+                                ${imgHTML}
+                            </div>
+                        `;
+                    });
+
+                    if (badge) {
+                        if (newCount > 0) {
+                            badge.textContent = newCount;
+                            badge.classList.remove('hidden');
+                        } else {
+                            badge.classList.add('hidden');
+                        }
+                    }
+                }, (error) => {
+                    console.error('[Profile] Notifications listener error:', error.message);
+                });
+
+                db.collection('users').doc(user.uid).collection('blocked_users').onSnapshot(snap => {
+                    const bList = document.getElementById('blocked-list');
+                    if(!bList) return;
+                    
+                    if (snap.empty) {
+                        bList.innerHTML = '<div class="flex flex-col items-center justify-center opacity-50 mt-6" id="empty-blocked"><span class="font-game font-bold text-[10px] text-textDim uppercase tracking-widest">NO BLOCKED USERS</span></div>';
+                    } else {
+                        bList.innerHTML = '';
+                        snap.forEach(doc => {
+                            const d = doc.data();
+                            bList.innerHTML += `
+                                <div class="bg-gameCard border border-tBorder/5 px-4 py-3.5 rounded-xl flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <img src="${d.avatar || 'images/avatar/default_male.webp'}" class="w-8 h-8 rounded-md object-cover border border-booyahOrange/50">
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-bold text-tPrimary tracking-wide">${d.nickname}</span>
+                                            <span class="text-[9px] text-textDim font-game">UID: ${d.uid}</span>
+                                        </div>
+                                    </div>
+                                    <button onclick="unblockUser('${d.uid}', '${d.nickname}')" class="text-xs text-booyahOrange font-bold hover:underline">UNBLOCK</button>
+                                </div>
+                            `;
+                        });
+                    }
+                }, (error) => {
+                    console.error('[Profile] Blocked list listener error:', error.message);
+                });
+
+            } else {
+                hideLoader();
+                window.parent.postMessage({ type: 'NAVIGATE', route: 'login.html' }, '*');
+            }
+        });
+    </script>
+</body>
+</html>

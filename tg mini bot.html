@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Booyah Reward</title>
+
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <!-- Ad Network SDK -->
+    <script src="https://libtl.com/sdk.js" data-zone="11364833" data-sdk="show_11364833"></script>
+
+    <!-- Lottie for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        booyahOrange: '#FF6B00',
+                        booyahYellow: '#FFCC00',
+                        gameDark: '#0A0E1A',
+                        gameCard: '#151B2D',
+                        textDim: '#7E8B9B',
+                        tPrimary: '#0F172A'
+                    },
+                    fontFamily: { game: ['Orbitron', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; 
+            background-color: #F8FAFC;
+            overscroll-behavior: none;
+            overscroll-behavior-y: none;
+        }
+
+        .scroll-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: none; 
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* White Header */
+        .booyah-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #FFFFFF;
+            padding: 12px 18px;
+            border-bottom: 1px solid #E2E8F0;
+            position: relative;
+            height: 80px; 
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+
+        .header-profile-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 3;
+        }
+
+        .header-avatar {
+            width: 44px; 
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2.5px solid #FFFFFF;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        .header-username-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .header-username {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0F172A;
+            letter-spacing: -0.3px;
+        }
+
+        .header-uid {
+            font-size: 10px;
+            font-weight: 700;
+            color: #D97706; 
+            font-family: 'Orbitron', sans-serif;
+            margin-top: 1px;
+            letter-spacing: 0.5px;
+        }
+
+        .header-watermark {
+            height: 38px; 
+            width: auto;
+            opacity: 0.95;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .app-container {
+            position: relative;
+            z-index: 2;
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .promo-banner-container {
+            margin-bottom: 24px;
+            width: 100%;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+        }
+
+        .promo-banner {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .coin-card {
+            background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            border-radius: 24px;
+            padding: 25px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05), 0 4px 20px rgba(217, 119, 6, 0.12);
+        }
+
+        .coin-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .coin-label {
+            font-size: 14px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .coin-badge {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0D9488;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .balances-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            position: relative;
+            z-index: 2;
+            margin-bottom: 15px;
+        }
+
+        .balance-box {
+            background: rgba(15, 23, 42, 0.03);
+            border: 1px solid rgba(15, 23, 42, 0.04);
+            border-radius: 16px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .balance-box img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .balance-value-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .balance-title {
+            font-size: 10px;
+            color: #64748B;
+            text-transform: uppercase;
+        }
+
+        .balance-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0F172A;
+        }
+
+        .transfer-btn {
+            background: linear-gradient(135deg, #FF6B00 0%, #FFCC00 100%);
+            color: #0A0E1A;
+            border: none;
+            padding: 13px;
+            width: 100%;
+            border-radius: 14px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            cursor: pointer;
+            z-index: 2;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .transfer-btn:active {
+            transform: scale(0.97);
+        }
+
+        .booyah-link-btn {
+            background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+            color: #FFFFFF;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 16px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+            transition: all 0.3s ease;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .booyah-link-btn:active {
+            transform: scale(0.97);
+        }
+
+        .coin-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-item {
+            background: rgba(15, 23, 42, 0.02);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid rgba(15, 23, 42, 0.02);
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #D97706;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #64748B;
+            margin-top: 2px;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            margin-bottom: 24px;
+            animation: slideUp 0.7s ease-out;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .progress-ring-container {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+        }
+
+        .progress-ring {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            flex-shrink: 0;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-bg {
+            fill: none;
+            stroke: rgba(15, 23, 42, 0.06);
+            stroke-width: 8;
+        }
+
+        .progress-ring-fill {
+            fill: none;
+            stroke: url(#progressGradient);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 251.2;
+            stroke-dashoffset: 251.2;
+            transition: stroke-dashoffset 0.8s ease-out;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .progress-text .number {
+            font-size: 24px;
+            font-weight: 800;
+            color: #D97706;
+        }
+
+        .progress-text .label {
+            font-size: 10px;
+            color: #64748B;
+        }
+
+        .progress-info {
+            flex: 1;
+        }
+
+        .progress-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .progress-info p {
+            font-size: 13px;
+            color: #475569;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(15, 23, 42, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #F59E0B 0%, #EA580C 100%);
+            border-radius: 3px;
+            transition: width 0.8s ease-out;
+            position: relative;
+        }
+
+        /* Task List */
+        .tasks-section {
+            margin-bottom: 24px;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+        }
+
+        .task-card.current {
+            border-color: #D97706;
+            background: rgba(245, 158, 11, 0.04);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08);
+        }
+
+        .task-card:hover:not(.locked) {
+            transform: translateY(-2px);
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06), 0 0 15px rgba(245, 158, 11, 0.05);
+        }
+
+        .task-card.completed {
+            opacity: 0.65;
+            border-color: rgba(13, 148, 136, 0.3);
+            background: rgba(13, 148, 136, 0.01);
+        }
+
+        .task-card.completed .task-icon {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0D9488;
+        }
+
+        .task-card.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .task-card.locked .task-icon {
+            background: rgba(15, 23, 42, 0.03);
+            color: #64748B;
+        }
+
+        .task-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: rgba(245, 158, 11, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .task-card:not(.locked):hover .task-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .task-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #0F172A;
+        }
+
+        .task-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #64748B;
+        }
+
+        .task-status {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-shrink: 0;
+        }
+
+        /* Timer Display */
+        .timer-display {
+            background: linear-gradient(135deg, rgba(234, 88, 12, 0.08), rgba(245, 158, 11, 0.04));
+            border: 1px solid rgba(234, 88, 12, 0.15);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            animation: slideUp 0.9s ease-out, pulse 2s infinite;
+        }
+
+        .timer-icon {
+            font-size: 28px;
+            animation: tick 1s infinite;
+        }
+
+        @keyframes tick {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .timer-info {
+            text-align: center;
+        }
+
+        .timer-label {
+            font-size: 12px;
+            color: #475569;
+            margin-bottom: 4px;
+        }
+
+        .timer-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: #EA580C;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px;
+        }
+
+        /* Main Action Button */
+        .action-section {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(to top, #F8FAFC 60%, transparent);
+            z-index: 100;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        .main-btn {
+            width: 100%;
+            padding: 18px 24px;
+            border: none;
+            border-radius: 16px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .main-btn.primary {
+            background: linear-gradient(135deg, #F59E0B 0%, #EA580C 100%);
+            color: #FFFFFF;
+            box-shadow: 0 8px 24px rgba(234, 88, 12, 0.25), 0 0 0 1px rgba(245, 158, 11, 0.3);
+        }
+
+        .main-btn.primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(234, 88, 12, 0.35), 0 0 0 2px rgba(245, 158, 11, 0.45);
+        }
+
+        .main-btn.primary:active:not(:disabled) {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .main-btn:disabled {
+            background: #E2E8F0;
+            color: #94A3B8;
+            box-shadow: none;
+            cursor: not-allowed;
+            border: 1px solid rgba(0, 0, 0, 0.02);
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .coin-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 26px;
+            font-weight: 800;
+            color: #D97706;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            text-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
+            white-space: nowrap;
+        }
+
+        .coin-popup.show {
+            animation: coinPopup 1.5s ease-out forwards;
+        }
+
+        @keyframes coinPopup {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            40% { transform: translate(-50%, -60%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -100%) scale(0.8); }
+        }
+
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(135deg, rgba(234, 88, 12, 0.1), rgba(245, 158, 11, 0.1));
+            border: 1px solid rgba(234, 88, 12, 0.15);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #EA580C;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: #FFFFFF;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 16px;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1001;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0F172A;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+
+    <!-- ==================== FIREBASE LOGIN OVERLAY CARD ==================== -->
+    <div id="auth-overlay" class="fixed inset-0 z-[150] bg-black/60 flex items-center justify-center p-4 backdrop-blur-md hidden transition-opacity duration-500">
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 w-full max-w-sm shadow-2xl relative">
+            <div class="text-center mb-5">
+                <img src="https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free fire/App logo.png" class="w-14 h-14 mx-auto object-contain border border-amber-500/40 rounded-full shadow-md">
+                <h3 class="font-game font-black text-sm text-slate-900 mt-3 tracking-widest uppercase">BOOYAH AUTHENTICATION</h3>
+                <p class="text-[11px] text-slate-500 mt-1 font-medium">Enter your Arena account credentials to sync rewards.</p>
+            </div>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1.5 uppercase font-game">Arena Email</label>
+                    <input type="email" id="login-email" placeholder="gamer@booyah.com" class="w-full bg-slate-50 border border-slate-200 focus:border-amber-500 text-xs px-4 py-3 rounded-xl text-slate-900 outline-none font-medium placeholder:text-slate-400 transition" required>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1.5 uppercase font-game">Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 focus:border-amber-500 text-xs px-4 py-3 rounded-xl text-slate-900 outline-none font-medium placeholder:text-slate-400 transition" required>
+                </div>
+                
+                <button type="submit" id="login-btn" class="w-full py-3.5 mt-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-game font-black text-xs tracking-widest rounded-xl transition shadow-lg hover:brightness-110 active:scale-95">CONNECT NOW</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== PURE WHITE THEME BENGALI TRANSFER MODAL ==================== -->
+    <div id="transfer-modal" class="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center p-4 backdrop-blur-md hidden transition-all duration-300">
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 w-full max-w-sm shadow-2xl relative text-center overflow-hidden">
+
+            <div id="transfer-modal-icon" class="text-5xl mb-2 drop-shadow-sm">⚡</div>
+            <h3 id="transfer-modal-title" class="font-game font-black text-base text-[#0F172A] tracking-widest uppercase mb-1">BOOYAH WALLET SYNC</h3>
+            <p id="transfer-modal-subtitle" class="text-[10px] text-slate-500 font-bold uppercase font-game mb-4 tracking-wider">Direct Wallet Sync Protocol</p>
+            
+            <div id="transfer-modal-body" class="space-y-3 mb-5 text-left">
+                <!-- Dynamic Content & Progress Bars Injected Here -->
+            </div>
+            
+            <div id="transfer-modal-actions" class="flex gap-3 pt-2">
+                <button id="transfer-modal-close" onclick="closeTransferModal()" class="w-full py-3.5 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl font-game tracking-wider hover:bg-slate-200 active:scale-95 transition">বন্ধ করুন</button>
+                <button id="transfer-modal-confirm" onclick="executeTransfer()" class="w-full py-3.5 bg-gradient-to-r from-[#FF6B00] to-[#FFCC00] text-slate-900 font-black text-xs rounded-xl font-game tracking-wider shadow-md hover:brightness-105 active:scale-95 transition hidden">কনফার্ম ট্রান্সফার</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll Wrapper -->
+    <div class="scroll-wrapper">
+
+        <!-- Top Horizontal White Header -->
+        <div class="booyah-header">
+            <div class="header-profile-section">
+                <img class="header-avatar" id="headerAvatar" src="https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free fire/1780895681243_CompressJPEG.Online_img_512x512_.png" alt="Avatar">
+                <div class="header-username-container">
+                    <span class="header-username" id="userName">Hello, User!</span>
+                    <span class="header-uid" id="userUID">UID: Connecting...</span>
+                </div>
+            </div>
+            <img class="header-watermark" src="https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free fire/booyah_day.webp" alt="Watermark">
+        </div>
+
+        <div class="app-container">
+            <!-- Promo Banner Under Header -->
+            <div class="promo-banner-container">
+                <img class="promo-banner" src="https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free fire/1781534915466_1781534861026.png" alt="Booyah Promo">
+            </div>
+
+            <!-- Balances Card -->
+            <div class="coin-card">
+                <div class="coin-header">
+                    <span class="coin-label">Booyah Reward Dashboard</span>
+                    <span class="coin-badge">Active</span>
+                </div>
+                
+                <div class="balances-container">
+                    <div class="balance-box">
+                        <img src="https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free fire/coin.webp" alt="Coin">
+                        <div class="balance-value-container">
+                            <span class="balance-title">Coins</span>
+                            <span class="balance-val" id="coinCount">0</span>
+                        </div>
+                    </div>
+                    <div class="balance-box">
+                        <img src="https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free fire/diamond.webp" alt="Diamond">
+                        <div class="balance-value-container">
+                            <span class="balance-title">Diamonds</span>
+                            <span class="balance-val" id="diamondCount">0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payout Button -->
+                <button class="transfer-btn mb-3" onclick="transferFunds()">⇄ Transfer Wallet</button>
+
+                <!-- Brand Booyah Day Link Button -->
+                <button onclick="openBooyahLink()" class="booyah-link-btn">
+                    <span>🔥</span> OPEN BOOYAH DAY APP
+                </button>
+
+                <!-- Stats Grid -->
+                <div class="coin-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalAds">0</div>
+                        <div class="stat-label">Lifetime Completed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="tasksDone">0</div>
+                        <div class="stat-label">Today's Tasks</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="progress-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="icon">🏆</span>
+                        Daily Progress
+                    </div>
+                    <span class="level-badge" id="levelBadge">Get Free Fire Diamond</span>
+                </div>
+                <div class="progress-ring-container">
+                    <div class="progress-ring">
+                        <svg width="100" height="100" viewBox="0 0 100 100">
+                            <circle class="progress-ring-bg" cx="50" cy="50" r="40"/>
+                            <circle class="progress-ring-fill" id="progressRing" cx="50" cy="50" r="40"/>
+                        </svg>
+                        <div class="progress-text">
+                            <div class="number" id="progressPercent">0%</div>
+                            <div class="label">Complete</div>
+                        </div>
+                    </div>
+                    <div class="progress-info">
+                        <h4>Daily Target</h4>
+                        <p>Watch ads to earn coins and diamonds to withdraw!</p>
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timer Display -->
+            <div class="timer-display" id="timerDisplay">
+                <span class="timer-icon">⏱️</span>
+                <div class="timer-info">
+                    <div class="timer-label">Next Task Available In</div>
+                    <div class="timer-value" id="timerValue">00:00</div>
+                </div>
+            </div>
+
+            <!-- Tasks Section -->
+            <div class="tasks-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span class="icon">🎯</span>
+                        Today's Tasks
+                    </div>
+                    <span style="font-size: 13px; color: #64748B;" id="taskCounter">0/20</span>
+                </div>
+                <div class="task-list" id="taskList">
+                    <!-- Dynamic Tasks -->
+                </div>
+            </div>
+
+            <div style="height: 80px;"></div>
+        </div>
+    </div>
+
+    <!-- Background Elements -->
+    <div class="particles" id="particles"></div>
+    <canvas id="confetti-canvas"></canvas>
+    <div class="coin-popup" id="coinPopup">+10 🪙</div>
+
+    <!-- Bottom Action Button -->
+    <div class="action-section">
+        <button class="main-btn primary" id="adButton" onclick="watchAd()">
+            <span>🎬</span>
+            <span id="btnText">Watch Rewarded Ad</span>
+        </button>
+    </div>
+
+    <script>
+        // ==================== FIREBASE CONFIGURATION ====================
+        const firebaseConfig = {
+          apiKey: "AIzaSyAwhCQ6UN-xmI2xMKsT5V_11LrHCDYn4Yo",
+          authDomain: "booyahdaylive.firebaseapp.com",
+          projectId: "booyahdaylive",
+          storageBucket: "booyahdaylive.firebasestorage.app",
+          messagingSenderId: "607763134560",
+          appId: "1:607763134560:web:c35120fcef7e5877d1ab05"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ==================== REWARDS DATABASE ====================
+        const REWARDS_CONFIG = [
+            { coins: 5, diamonds: 0.00 }, // 1
+            { coins: 0, diamonds: 0.20 }, // 2
+            { coins: 8, diamonds: 0.10 }, // 3
+            { coins: 0, diamonds: 0.15 }, // 4
+            { coins: 6, diamonds: 0.00 }, // 5
+            { coins: 2, diamonds: 0.25 }, // 6
+            { coins: 0, diamonds: 0.10 }, // 7
+            { coins: 4, diamonds: 0.15 }, // 8
+            { coins: 5, diamonds: 0.00 }, // 9
+            { coins: 0, diamonds: 0.20 }, // 10
+            { coins: 7, diamonds: 0.10 }, // 11
+            { coins: 0, diamonds: 0.15 }, // 12
+            { coins: 3, diamonds: 0.00 }, // 13
+            { coins: 2, diamonds: 0.25 }, // 14
+            { coins: 5, diamonds: 0.00 }, // 15
+            { coins: 0, diamonds: 0.10 }, // 16
+            { coins: 3, diamonds: 0.05 }, // 17
+            { coins: 0, diamonds: 0.15 }, // 18
+            { coins: 0, diamonds: 0.05 }, // 19
+            { coins: 0, diamonds: 0.05 }  // 20
+        ];
+
+        // ==================== CONFIGURATION ====================
+        const MAX_ADS_PER_DAY = 20;
+        const COOLDOWN_1_MIN = 60 * 1000;  // First 10 ads = 1m cooldown
+        const COOLDOWN_5_MIN = 5 * 60 * 1000; // Next 10 ads = 5m cooldown
+
+        // ==================== STATE MANAGEMENT ====================
+        let coins = 0;
+        let diamonds = 0.00;
+        let adCount = 0;
+        let lifetimeAdCount = 0;
+        let lastAdTime = 0;
+
+        let streak = parseInt(localStorage.getItem('streak')) || 0;
+        let timerInterval;
+        let confettiInstance = null;
+
+        // ==================== COOLDOWN CALCULATOR ====================
+        function getCooldownTime() {
+            const currentTaskNum = adCount + 1;
+            return (currentTaskNum <= 10) ? COOLDOWN_1_MIN : COOLDOWN_5_MIN;
+        }
+
+        // ==================== PARTICLE SYSTEM ====================
+        function initParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // ==================== CONFETTI SYSTEM ====================
+        class ConfettiSystem {
+            constructor() {
+                this.canvas = document.getElementById('confetti-canvas');
+                if (!this.canvas) return;
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                this.animate();
+            }
+
+            resize() {
+                if (!this.canvas) return;
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            createParticle(x, y) {
+                const colors = ['#FFD700', '#FF6B35', '#00D4AA', '#FF4757', '#FFA502', '#FFFFFF'];
+                return {
+                    x, y,
+                    vx: (Math.random() - 0.5) * 15,
+                    vy: -Math.random() * 15 - 5,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 10,
+                    gravity: 0.4,
+                    drag: 0.96,
+                    life: 1
+                };
+            }
+
+            explode(x, y, count = 50) {
+                if (!this.ctx) return;
+                for (let i = 0; i < count; i++) {
+                    this.particles.push(this.createParticle(x, y));
+                }
+            }
+
+            animate() {
+                if (!this.ctx) return;
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.particles = this.particles.filter(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += p.gravity;
+                    p.vx *= p.drag;
+                    p.vy *= p.drag;
+                    p.rotation += p.rotationSpeed;
+                    p.life -= 0.015;
+
+                    if (p.life <= 0) return false;
+
+                    this.ctx.save();
+                    this.ctx.translate(p.x, p.y);
+                    this.ctx.rotate(p.rotation * Math.PI / 180);
+                    this.ctx.globalAlpha = p.life;
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    this.ctx.restore();
+
+                    return true;
+                });
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // ==================== UI UPDATES (DYNAMIC PERCENT & COUNTERS) ====================
+        function updateUI() {
+            try {
+                document.getElementById('coinCount').innerText = coins.toLocaleString();
+                document.getElementById('diamondCount').innerText = diamonds.toFixed(2);
+                document.getElementById('totalAds').innerText = lifetimeAdCount; 
+                document.getElementById('tasksDone').innerText = adCount;        
+                document.getElementById('taskCounter').innerText = adCount + '/' + MAX_ADS_PER_DAY;
+                document.getElementById('streakText').innerText = streak + ' Day' + (streak !== 1 ? 's' : '');
+
+                // Dynamically Calculate Daily Progress Percent (0% to 100%)
+                const percent = Math.min((adCount / MAX_ADS_PER_DAY) * 100, 100);
+                const circumference = 251.2; // 2 * PI * 40
+                const offset = circumference - (percent / 100) * circumference;
+
+                const progressRing = document.getElementById('progressRing');
+                const progressBar = document.getElementById('progressBar');
+                const progressPercent = document.getElementById('progressPercent');
+
+                if (progressRing) progressRing.style.strokeDashoffset = offset;
+                if (progressBar) progressBar.style.width = percent + '%';
+                if (progressPercent) progressPercent.innerText = Math.round(percent) + '%';
+            } catch (err) {
+                console.error("UI elements missing or errored", err);
+            }
+
+            generateTaskList();
+        }
+
+        // ==================== TASK LIST GENERATOR ====================
+        function generateTaskList() {
+            try {
+                const taskList = document.getElementById('taskList');
+                if (!taskList) return;
+                taskList.innerHTML = '';
+
+                const cooldownTime = getCooldownTime();
+                const timePassed = Date.now() - lastAdTime;
+                const timeLeft = cooldownTime - timePassed;
+                const isTimerActive = (timeLeft > 0);
+
+                for (let i = 1; i <= MAX_ADS_PER_DAY; i++) {
+                    const isCompleted = i <= adCount;
+                    const isLocked = i > (adCount + 1);
+                    const isCurrent = i === (adCount + 1);
+
+                    const isRewardedType = (i % 2 !== 0);
+                    const adTypeName = isRewardedType ? "Rewarded Interstitial" : "Rewarded Popup";
+                    const cooldownRuleText = (i <= 10) ? "1 Min Cooldown" : "5 Min Cooldown";
+
+                    let iconSymbol = "";
+                    let statusHtml = "";
+                    let metaText = "Mystery Reward • " + cooldownRuleText;
+
+                    if (isCompleted) {
+                        iconSymbol = '✅';
+                        statusHtml = '<span class="text-xs font-bold text-teal-600">✓ Completed</span>';
+                    } else if (isCurrent) {
+                        if (isTimerActive) {
+                            // Active Timer -> Lock Icon, NO EMOJI next to countdown text!
+                            iconSymbol = '🔒';
+                            const m = Math.floor(timeLeft / 60000);
+                            const s = Math.floor((timeLeft % 60000) / 1000);
+                            metaText = "Wait " + m + "m " + s + "s";
+                            statusHtml = '<span class="text-xs font-bold text-amber-600">🔒 Locked</span>';
+                        } else {
+                            // Timer Expired -> Ready!
+                            iconSymbol = '🎁';
+                            statusHtml = '<span class="text-xs font-bold text-emerald-600">▶ Ready</span>';
+                        }
+                    } else {
+                        // Future Locked Tasks
+                        iconSymbol = '🔒';
+                        statusHtml = '<span class="text-xs font-bold text-slate-400">🔒 Locked</span>';
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = "task-card " + (isCompleted ? 'completed' : '') + " " + (isLocked || (isCurrent && isTimerActive) ? 'locked' : '') + " " + (isCurrent && !isTimerActive ? 'current' : '');
+
+                    card.innerHTML = '\
+                        <div class="task-icon">' + iconSymbol + '</div>\
+                        <div class="task-details">\
+                            <div class="task-name" style="font-weight: ' + (isCurrent ? '700' : '600') + '">' + adTypeName + ' #' + i + '</div>\
+                            <div class="task-meta">\
+                                <span>' + metaText + '</span>\
+                            </div>\
+                        </div>\
+                        <div class="task-status">\
+                            ' + statusHtml + '\
+                        </div>\
+                    ';
+
+                    if (isCurrent && !isTimerActive) {
+                        card.addEventListener('click', function(e) {
+                            watchAd();
+                        });
+                    }
+
+                    taskList.appendChild(card);
+                }
+            } catch (err) {
+                console.error("Error generating task list: ", err);
+            }
+        }
+
+        // ==================== TIMER SYSTEM ====================
+        function updateTimer() {
+            try {
+                const btn = document.getElementById('adButton');
+                const btnText = document.getElementById('btnText');
+                const timerValue = document.getElementById('timerValue');
+                const timerDisplay = document.getElementById('timerDisplay');
+
+                if (!btn || !btnText || !timerValue || !timerDisplay) return;
+
+                if (adCount >= MAX_ADS_PER_DAY) {
+                    btn.disabled = true;
+                    btnText.innerText = 'Limit Reached (20/20)';
+                    timerDisplay.style.display = 'none';
+                    return;
+                }
+
+                const currentTaskNum = adCount + 1;
+                const isRewardedType = (currentTaskNum % 2 !== 0);
+                const cooldownTime = getCooldownTime();
+
+                const timePassed = Date.now() - lastAdTime;
+                const timeLeft = cooldownTime - timePassed;
+
+                if (timeLeft > 0) {
+                    btn.disabled = true;
+                    timerDisplay.style.display = 'flex';
+
+                    clearInterval(timerInterval);
+                    timerInterval = setInterval(function() {
+                        const nowLeft = cooldownTime - (Date.now() - lastAdTime);
+                        if (nowLeft <= 0) {
+                            clearInterval(timerInterval);
+                            updateTimer();
+                            updateUI();
+                        } else {
+                            const m = Math.floor(nowLeft / 60000);
+                            const s = Math.floor((nowLeft % 60000) / 1000);
+                            const timeStr = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+                            timerValue.innerText = timeStr;
+                            btnText.innerText = 'Wait ' + m + 'm ' + s + 's';
+                            generateTaskList();
+                        }
+                    }, 1000);
+
+                    const m = Math.floor(timeLeft / 60000);
+                    const s = Math.floor((timeLeft % 60000) / 1000);
+                    timerValue.innerText = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+                    btnText.innerText = 'Wait ' + m + 'm ' + s + 's';
+                } else {
+                    btn.disabled = false;
+                    btnText.innerText = isRewardedType ? 'Watch Rewarded Ad' : 'Watch Popup Ad';
+                    timerDisplay.style.display = 'none';
+                }
+            } catch (err) {
+                console.error("Timer UI Error: ", err);
+            }
+        }
+
+        // ==================== REWARD ANIMATION ====================
+        function showCoinAnimation(coinGift, diamondGift) {
+            try {
+                const popup = document.getElementById('coinPopup');
+                if (!popup) return;
+                let textToShow = '';
+                
+                if (coinGift > 0 && diamondGift > 0) {
+                    textToShow = '+' + coinGift + ' 🪙 & +' + diamondGift.toFixed(2) + ' 💎';
+                } else if (coinGift > 0) {
+                    textToShow = '+' + coinGift + ' 🪙';
+                } else if (diamondGift > 0) {
+                    textToShow = '+' + diamondGift.toFixed(2) + ' 💎';
+                }
+
+                popup.innerText = textToShow;
+                popup.classList.remove('show');
+                void popup.offsetWidth;
+                popup.classList.add('show');
+
+                const rect = document.getElementById('coinCount').getBoundingClientRect();
+                if (confettiInstance) confettiInstance.explode(rect.left + rect.width/2, rect.top + rect.height/2, 30);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // ==================== TOAST NOTIFICATION ====================
+        function showToast(message) {
+            try {
+                const toast = document.getElementById('toast');
+                const toastText = document.getElementById('toastText');
+                if (!toast || !toastText) return;
+                toastText.innerText = message;
+                toast.classList.add('show');
+                setTimeout(function() { toast.classList.remove('show'); }, 3000);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // ==================== WATCH AD FUNCTION (FIREBASE CLOUD WRITE) ====================
+        function watchAd() {
+            if (adCount >= MAX_ADS_PER_DAY) return;
+
+            const currentUser = auth.currentUser;
+            if (!currentUser) {
+                alert("অ্যাকাউন্ট সেশন পাওয়া যায়নি! অনুগ্রহ করে আগে লগইন করুন।");
+                document.getElementById('auth-overlay').classList.remove('hidden');
+                return;
+            }
+
+            const cooldownTime = getCooldownTime();
+            if (Date.now() - lastAdTime < cooldownTime) {
+                showToast("Ad node cooldown active!");
+                return;
+            }
+
+            // ANTI-BYPASS SYSTEM
+            const deviceDailyCount = parseInt(localStorage.getItem('device_daily_adCount')) || 0;
+            if (deviceDailyCount >= MAX_ADS_PER_DAY) {
+                alert("নিরাপত্তা সতর্কতা: এই ডিভাইসে আজকের দৈনিক লিমিট শেষ! দয়া করে আগামীকাল আবার চেষ্টা করুন।");
+                return;
+            }
+
+            const btn = document.getElementById('adButton');
+            const btnText = document.getElementById('btnText');
+            if (!btn || !btnText) return;
+
+            btn.disabled = true;
+            btnText.innerText = "Ad Engine Loading...";
+
+            if (typeof show_11364833 !== "function") {
+                let retryCount = 0;
+                let checkSDK = setInterval(function() {
+                    retryCount++;
+                    if (typeof show_11364833 === "function") {
+                        clearInterval(checkSDK);
+                        executeAdPlayback();
+                    } else if (retryCount >= 3) {
+                        clearInterval(checkSDK);
+                        alert("অ্যাড নেটওয়ার্ক লোড হতে পারছে না! দয়া করে আপনার ডিভাইসের AdBlocker/Private DNS বন্ধ করে পুনরায় চেষ্টা করুন।");
+                        updateTimer();
+                        updateUI();
+                    }
+                }, 1000);
+            } else {
+                executeAdPlayback();
+            }
+        }
+
+        function executeAdPlayback() {
+            const currentUser = auth.currentUser;
+            if (!currentUser) return;
+
+            const currentTaskNum = adCount + 1;
+            const isRewardedType = (currentTaskNum % 2 !== 0);
+            const btnText = document.getElementById('btnText');
+
+            try {
+                let adPromise = isRewardedType ? show_11364833() : show_11364833('pop');
+
+                adPromise.then(function() {
+                    let verifySeconds = 15;
+                    btnText.innerText = '📡 VERIFYING WATCH (' + verifySeconds + 's)...';
+                    
+                    let verifyInterval = setInterval(function() {
+                        verifySeconds--;
+                        if (verifySeconds > 0) {
+                            btnText.innerText = '📡 VERIFYING WATCH (' + verifySeconds + 's)...';
+                        } else {
+                            clearInterval(verifyInterval);
+                        }
+                    }, 1000);
+
+                    setTimeout(async function() {
+                        clearInterval(verifyInterval);
+
+                        const rewards = REWARDS_CONFIG[adCount];
+                        const coinReward = rewards.coins;
+                        const diamondReward = rewards.diamonds;
+                        const nowTime = Date.now();
+
+                        // ★ REAL-TIME FIRESTORE UPDATE (INSTANT CLOUD SYNC) ★
+                        try {
+                            const userRef = db.collection('users').doc(currentUser.uid);
+                            await userRef.set({
+                                tma_coins: firebase.firestore.FieldValue.increment(coinReward),
+                                tma_diamonds: firebase.firestore.FieldValue.increment(diamondReward),
+                                tma_adCount: firebase.firestore.FieldValue.increment(1),
+                                tma_lifetimeAdCount: firebase.firestore.FieldValue.increment(1),
+                                tma_lastAdTime: nowTime,
+                                tma_lastResetDate: new Date().toDateString()
+                            }, { merge: true });
+
+                            // Global device count tracking
+                            const updatedDeviceCount = (parseInt(localStorage.getItem('device_daily_adCount')) || 0) + 1;
+                            localStorage.setItem('device_daily_adCount', updatedDeviceCount);
+
+                            showCoinAnimation(coinReward, diamondReward);
+                            
+                            let completeMsg = "Node Updated!";
+                            if (coinReward > 0 && diamondReward > 0) {
+                                completeMsg = '+' + coinReward + ' Coins & +' + diamondReward.toFixed(2) + ' Diamonds Claimed!';
+                            } else if (coinReward > 0) {
+                                completeMsg = '+' + coinReward + ' Coins Claimed!';
+                            } else if (diamondReward > 0) {
+                                completeMsg = '+' + diamondReward.toFixed(2) + ' Diamonds Claimed!';
+                            }
+                            showToast(completeMsg);
+                        } catch (cloudErr) {
+                            console.error("Firestore sync failed: ", cloudErr);
+                            alert("ডাটাবেজ আপডেট করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন!");
+                        }
+
+                        updateTimer();
+                    }, 15000); // 15s Verification
+                }).catch(function(e) {
+                    console.error('Ad Error:', e);
+                    alert("বিজ্ঞাপন প্লে হতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন!");
+                    updateTimer();
+                    updateUI();
+                });
+            } catch (err) {
+                console.error(err);
+                alert("বিজ্ঞাপন প্রদর্শন করতে ব্যর্থ হয়েছে!");
+                updateTimer();
+                updateUI();
+            }
+        }
+
+        // ==================== WHITE THEME BENGALI TRANSFER MODAL ====================
+        function transferFunds() {
+            try {
+                const currentUser = auth.currentUser;
+                if (!currentUser) {
+                    alert("অ্যাকাউন্ট সেশন পাওয়া যায়নি! অনুগ্রহ করে আপনার Booyah Arena অ্যাকাউন্টটি কানেক্ট করুন।");
+                    document.getElementById('auth-overlay').classList.remove('hidden');
+                    return;
+                }
+
+                const modal = document.getElementById('transfer-modal');
+                const title = document.getElementById('transfer-modal-title');
+                const body = document.getElementById('transfer-modal-body');
+                const confirmBtn = document.getElementById('transfer-modal-confirm');
+                const icon = document.getElementById('transfer-modal-icon');
+
+                const coinPercent = Math.min((coins / 1500) * 100, 100);
+                const diamondPercent = Math.min((diamonds / 5.0) * 100, 100);
+
+                const neededCoins = 1500 - coins;
+                const neededDiamonds = (5.0 - diamonds).toFixed(2);
+
+                if (coins >= 1500 && diamonds >= 5.0) {
+                    icon.innerText = "🎉";
+                    title.innerText = "TRANSFER READY";
+                    
+                    body.innerHTML = '\
+                        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-slate-900 mb-3">\
+                            <span class="text-[10px] text-slate-500 font-bold font-game uppercase block mb-1">CONNECTED PROFILE</span>\
+                            <span class="text-xs font-black font-game text-amber-600">UID: ' + (currentUser.uid) + '</span>\
+                        </div>\
+                        <p class="text-xs text-slate-600 font-medium leading-relaxed text-center">\
+                            আপনার অ্যাকাউন্টে <b class="text-slate-900">' + coins + ' কয়েন</b> এবং <b class="text-slate-900">' + diamonds.toFixed(2) + ' ডায়মন্ড</b> সফলভাবে ট্রান্সফার করতে নিচের কনফার্ম বাটনে চাপুন।\
+                        </p>\
+                    ';
+                    confirmBtn.classList.remove('hidden');
+                } else {
+                    icon.innerText = "🔒";
+                    title.innerText = "TRANSFER LOCKED";
+
+                    const coinStatusBadge = neededCoins <= 0 
+                        ? '<span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">সম্পূর্ণ ✓</span>'
+                        : '<span class="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">প্রয়োজন: ' + neededCoins + '</span>';
+
+                    const diamondStatusBadge = neededDiamonds <= 0 
+                        ? '<span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">সম্পূর্ণ ✓</span>'
+                        : '<span class="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">প্রয়োজন: ' + neededDiamonds + '</span>';
+
+                    body.innerHTML = '\
+                        <p class="text-[11px] text-slate-500 font-medium mb-3 text-center">\
+                            ওয়ালেট ট্রান্সফার করার জন্য মিনিমাম <b class="text-slate-900">১৫০০ কয়েন</b> এবং <b class="text-slate-900">৫.০ ডায়মন্ড</b> প্রয়োজন।\
+                        </p>\
+                        \
+                        <!-- Coin Progress Box -->\
+                        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">\
+                            <div class="flex justify-between items-center text-[11px] font-bold">\
+                                <span class="text-slate-900 font-game">🪙 Coins</span>\
+                                <span class="text-amber-600 font-game">' + coins + ' / 1500</span>\
+                            </div>\
+                            <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">\
+                                <div class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all" style="width: ' + coinPercent + '%"></div>\
+                            </div>\
+                            <div class="flex justify-end pt-0.5">' + coinStatusBadge + '</div>\
+                        </div>\
+                        \
+                        <!-- Diamond Progress Box -->\
+                        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5 mt-2">\
+                            <div class="flex justify-between items-center text-[11px] font-bold">\
+                                <span class="text-slate-900 font-game">💎 Diamonds</span>\
+                                <span class="text-cyan-600 font-game">' + diamonds.toFixed(2) + ' / 5.00</span>\
+                            </div>\
+                            <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">\
+                                <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all" style="width: ' + diamondPercent + '%"></div>\
+                            </div>\
+                            <div class="flex justify-end pt-0.5">' + diamondStatusBadge + '</div>\
+                        </div>\
+                    ';
+                    
+                    confirmBtn.classList.add('hidden');
+                }
+
+                modal.classList.remove('hidden');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function closeTransferModal() {
+            document.getElementById('transfer-modal').classList.add('hidden');
+        }
+
+        async function executeTransfer() {
+            const currentUser = auth.currentUser;
+            if (!currentUser) return;
+
+            const btn = document.getElementById('transfer-modal-confirm');
+            btn.disabled = true;
+            btn.innerText = "PROCESSING...";
+
+            try {
+                const userRef = db.collection('users').doc(currentUser.uid);
+                
+                const sfDoc = await userRef.get();
+                if (!sfDoc.exists) {
+                    throw "User document does not exist!";
+                }
+                
+                const currentTmaCoins = sfDoc.data().tma_coins || 0;
+                const currentTmaDiamonds = sfDoc.data().tma_diamonds || 0;
+
+                if (currentTmaCoins < 1500 || currentTmaDiamonds < 5.0) {
+                    throw "Insufficient Mini App balance to complete transfer!";
+                }
+                
+                // Secure Transfer via Cloudflare Webhook
+                const CLOUDFLARE_WORKER_URL = "YOUR_CLOUDFLARE_WORKER_URL_HERE/tg-transfer";
+                const SECRET_KEY = "TG_BOOYAH_SECURE_2026_xyz"; // Must match exactly
+
+                const response = await fetch(CLOUDFLARE_WORKER_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        uid: currentUser.uid,
+                        diamonds: currentTmaDiamonds,
+                        coins: currentTmaCoins,
+                        secret_key: SECRET_KEY
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || "Transfer Failed via API");
+                }
+
+                // Reset local mini app balances in Firestore after successful transfer
+                await userRef.update({
+                    tma_coins: 0,
+                    tma_diamonds: 0.00
+                });
+
+                // Keep transaction history in Firestore for record keeping
+                const trxId = Math.floor(Math.random() * 9000000).toString();
+                await userRef.collection('transactions').doc(trxId).set({
+                    title: "TMA REWARD MINING",
+                    amount: currentTmaDiamonds,
+                    currency: "diamonds",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                const trxIdCoins = Math.floor(Math.random() * 9000000).toString();
+                await userRef.collection('transactions').doc(trxIdCoins).set({
+                    title: "TMA REWARD MINING",
+                    amount: currentTmaCoins,
+                    currency: "coins",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                closeTransferModal();
+                alert('অভিনন্দন! আপনার ' + currentTmaCoins + ' কয়েন এবং ' + currentTmaDiamonds.toFixed(2) + ' ডায়মন্ড Booyah Arena প্রধান অ্যাকাউন্টে সফলভাবে যুক্ত করা হয়েছে।');
+                
+            } catch (err) {
+                console.error("Transfer Error: ", err);
+                alert("ডাটাবেজ ত্রুটি: " + (err.message || err));
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "কনফার্ম ট্রান্সফার";
+            }
+        }
+
+        // ==================== OPEN BRAND LOGO LINK ====================
+        function openBooyahLink() {
+            try {
+                const targetUrl = "https://booyahdaylive.com"; 
+                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) {
+                    window.Telegram.WebApp.openLink(targetUrl);
+                } else {
+                    window.open(targetUrl, '_blank');
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        // ==================== FIREBASE REALTIME LISTENER & AUTH ====================
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                const today = new Date().toDateString();
+                const deviceLockedUid = localStorage.getItem('device_locked_uid');
+                const deviceLockedDate = localStorage.getItem('device_locked_date');
+
+                if (deviceLockedDate !== today) {
+                    localStorage.setItem('device_locked_uid', user.uid);
+                    localStorage.setItem('device_locked_date', today);
+                } else {
+                    if (deviceLockedUid && deviceLockedUid !== user.uid) {
+                        alert("নিরাপত্তা সতর্কতা: আপনি একই ডিভাইসে অন্য Booyah অ্যাকাউন্ট ব্যবহার করতে পারবেন না! অনুগ্রহ করে আপনার প্রধান অ্যাকাউন্টটি ব্যবহার করুন।");
+                        auth.signOut();
+                        return;
+                    }
+                }
+
+                document.getElementById('auth-overlay').classList.add('hidden');
+
+                // Real-time Firestore sync listener across all devices
+                db.collection('users').doc(user.uid).onSnapshot(async (docSnap) => {
+                    if (docSnap.exists) {
+                        const data = docSnap.data();
+                        
+                        document.getElementById('userUID').innerText = "UID: " + (data.uid || user.uid);
+                        if (data.avatar) {
+                            document.getElementById('headerAvatar').src = data.avatar;
+                        }
+
+                        // Check daily reset on cloud state
+                        if (data.tma_lastResetDate !== today) {
+                            await db.collection('users').doc(user.uid).set({
+                                tma_adCount: 0,
+                                tma_lastResetDate: today
+                            }, { merge: true });
+                            adCount = 0;
+                        } else {
+                            adCount = data.tma_adCount || 0;
+                        }
+
+                        coins = data.tma_coins || 0;
+                        diamonds = data.tma_diamonds || 0.00;
+                        lifetimeAdCount = data.tma_lifetimeAdCount || adCount;
+                        lastAdTime = data.tma_lastAdTime || 0;
+
+                        updateUI();
+                        updateTimer();
+                    } else {
+                        document.getElementById('userUID').innerText = "UID: " + user.uid;
+                    }
+                }, (err) => {
+                    console.error("Firestore Listener Error: ", err);
+                });
+
+            } else {
+                document.getElementById('auth-overlay').classList.remove('hidden');
+                document.getElementById('userUID').innerText = "UID: Please Connect";
+            }
+        });
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-btn');
+
+            try {
+                btn.textContent = "AUTHENTICATING...";
+                btn.disabled = true;
+                await auth.signInWithEmailAndPassword(email, password);
+                alert("সফল হয়েছে! আপনার Booyah Arena অ্যাকাউন্টটি সফলভাবে লিঙ্ক করা হয়েছে।");
+            } catch (error) {
+                console.error("Login Error:", error);
+                alert("অথেনটিকেশন ব্যর্থ হয়েছে: " + error.message);
+            } finally {
+                btn.textContent = "CONNECT NOW";
+                btn.disabled = false;
+            }
+        });
+
+        // ==================== INITIALIZATION ====================
+        window.addEventListener('load', function() {
+            try { initParticles(); } catch(e) { console.error(e); }
+            try { confettiInstance = new ConfettiSystem(); } catch(e) { console.error(e); }
+            
+            try {
+                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+                    const user = window.Telegram.WebApp.initDataUnsafe.user;
+                    document.getElementById('userName').innerText = "Hello, " + (user.first_name || "User") + "!";
+                } else {
+                    document.getElementById('userName').innerText = "Hello, User!";
+                }
+            } catch(e) {
+                document.getElementById('userName').innerText = "Hello, User!";
+            }
+
+            try { updateUI(); } catch(e) { console.error(e); }
+            try { updateTimer(); } catch(e) { console.error(e); }
+
+            // Auto In-App Background Ad Init
+            try {
+                if (typeof show_11364833 === "function") {
+                    show_11364833({
+                        type: 'inApp',
+                        inAppSettings: {
+                            frequency: 2,
+                            capping: 0.1,
+                            interval: 30,
+                            timeout: 5,
+                            everyPage: false
+                        }
+                    });
+                }
+            } catch(e) { console.error(e); }
+        });
+    </script>
+</body>
+</html>

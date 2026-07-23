@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BOOYAH - Reels</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    
+    <!-- Theme engine -->
+    <script src="theme.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gameDark: 'rgb(var(--bg-primary-rgb) / <alpha-value>)',
+                        gameCard: 'rgb(var(--bg-card-rgb) / <alpha-value>)',
+                        gameCardLight: 'rgb(var(--bg-card-light-rgb) / <alpha-value>)',
+                        booyahOrange: '#FF6B00',
+                        booyahYellow: '#FFCC00',
+                        fireRed: '#E30052',
+                        cyberBlue: '#00F0FF',
+                        textDim: 'rgb(var(--text-dim-rgb) / <alpha-value>)',
+                        tPrimary: 'rgb(var(--text-primary-rgb) / <alpha-value>)',
+                        tBorder: 'rgb(var(--border-color-rgb) / <alpha-value>)'
+                    },
+                    fontFamily: { game: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: rgb(var(--bg-primary-rgb)); color: rgb(var(--text-primary-rgb)); font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col items-center justify-center p-6 text-center select-none">
+    
+    <div class="w-20 h-20 bg-gradient-to-br from-booyahOrange/20 to-booyahYellow/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(255,107,0,0.2)] animate-pulse">
+        <svg class="w-10 h-10 text-booyahOrange" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+    </div>
+    
+    <h1 class="font-game font-black text-2xl text-tPrimary mb-2 uppercase tracking-widest">Reels & Clips</h1>
+    <p class="text-textDim text-sm font-medium">This section is currently under development. Awesome gaming clips are coming soon!</p>
+
+</body>
+</html>
+

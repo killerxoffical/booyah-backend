@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>BOOYAH - Register</title>
+    <link rel="icon" type="image/png" href="images/app-logo.webp">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- Theme engine — MUST load before Tailwind -->
+    <script src="theme.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gameDark: 'rgb(var(--bg-primary-rgb) / <alpha-value>)',
+                        gameCard: 'rgb(var(--bg-card-rgb) / <alpha-value>)',
+                        gameCardLight: 'rgb(var(--bg-card-light-rgb) / <alpha-value>)',
+                        booyahOrange: '#FF6B00',
+                        booyahYellow: '#FFCC00',
+                        fireRed: '#E30052',
+                        cyberBlue: '#00F0FF',
+                        textDim: 'rgb(var(--text-dim-rgb) / <alpha-value>)',
+                        tPrimary: 'rgb(var(--text-primary-rgb) / <alpha-value>)',
+                        tBorder: 'rgb(var(--border-color-rgb) / <alpha-value>)'
+                    },
+                    fontFamily: { game: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background-color: transparent; 
+            background-image: url('images/others/login_bg.webp');
+            background-size: cover;
+            background-position: center;
+        }
+        .clip-gaming { clip-path: polygon(0 0, 90% 0, 100% 15%, 100% 100%, 10% 100%, 0 85%); }
+        .clip-btn { clip-path: polygon(0 0, 88% 0, 100% 35%, 100% 100%, 12% 100%, 0 65%); }
+        .bg-overlay { background: linear-gradient(to bottom, rgba(10,14,26,0.3) 0%, rgba(10,14,26,0.9) 100%); }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col select-none overflow-y-auto no-scrollbar pb-10 relative">
+    
+    <!-- Background Overlay -->
+    <div class="absolute inset-0 bg-overlay z-0 pointer-events-none"></div>
+
+    <div class="w-full flex-1 flex flex-col justify-center max-w-md mx-auto p-6 py-10 z-10 relative">
+        <button onclick="navigate('email-login.html')" class="text-xs text-textDim hover:text-white font-bold flex items-center gap-1 mb-6 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Back to Login
+        </button>
+
+        <div class="mb-8">
+            <h2 class="font-game font-black text-2xl tracking-wider text-booyahOrange drop-shadow-[0_0_10px_rgba(255,107,0,0.8)]">Welcome to BOOYAH DAY App</h2>
+            <h3 class="font-game font-bold text-lg text-white mt-2">Register your account</h3>
+            <span class="text-xs tracking-[0.2em] text-booyahYellow font-game mt-1 block">READY TO BATTLE</span>
+        </div>
+
+        <form id="register-form" class="space-y-4 flex-1 w-full">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-textDim mb-1.5 font-game">Gamer Nickname</label>
+                <input type="text" id="reg-nickname" placeholder="Enter your nickname" class="w-full px-4 py-3 rounded-lg text-sm text-tPrimary bg-gameCard/80 border border-booyahOrange/20 focus:border-booyahOrange outline-none transition" required>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-textDim mb-1.5 font-game">Email Address</label>
+                <input type="email" id="reg-email" placeholder="gamer@booyah.com" class="w-full px-4 py-3 rounded-lg text-sm text-tPrimary bg-gameCard/80 border border-booyahOrange/20 focus:border-booyahOrange outline-none transition" required>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-textDim mb-1.5 font-game">Password</label>
+                    <div class="relative">
+                        <input type="password" id="reg-password" placeholder="Min. 8 chars" class="w-full px-4 py-3 pr-10 rounded-lg text-sm text-tPrimary bg-gameCard/80 border border-booyahOrange/20 focus:border-booyahOrange outline-none transition" required>
+                        <button type="button" onclick="togglePassword('reg-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-textDim hover:text-white transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-textDim mb-1.5 font-game">Confirm</label>
+                    <div class="relative">
+                        <input type="password" id="reg-confirm" placeholder="Min. 8 chars" class="w-full px-4 py-3 pr-10 rounded-lg text-sm text-tPrimary bg-gameCard/80 border border-booyahOrange/20 focus:border-booyahOrange outline-none transition" required>
+                        <button type="button" onclick="togglePassword('reg-confirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-textDim hover:text-white transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-textDim mb-1.5 font-game">Gender</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center justify-center gap-2 bg-gameCard/80 border border-tBorder/10 px-4 py-2.5 rounded-lg cursor-pointer transition has-[:checked]:border-booyahOrange has-[:checked]:text-booyahOrange text-textDim">
+                        <input type="radio" name="gender" value="male" class="hidden" required>
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.5 9.5C17.5 6.46 15.04 4 12 4S6.5 6.46 6.5 9.5c0 2.7 1.94 4.93 4.5 5.4V20h2v-5.1c2.56-.47 4.5-2.7 4.5-5.4zm-9 0C8.5 7.57 10.07 6 12 6s3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5z"/></svg>
+                        <span class="text-xs font-bold font-game uppercase tracking-wider">Male</span>
+                    </label>
+                    <label class="flex items-center justify-center gap-2 bg-gameCard/80 border border-tBorder/10 px-4 py-2.5 rounded-lg cursor-pointer transition has-[:checked]:border-fireRed has-[:checked]:text-fireRed text-textDim">
+                        <input type="radio" name="gender" value="female" class="hidden" required>
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4a5 5 0 00-5 5c0 2.46 1.79 4.5 4.13 4.93v2.57H9v2h2.13v3h2v-3H15v-2h-1.87v-2.57C15.47 13.5 17 11.46 17 9a5 5 0 00-5-5zm0 8a3 3 0 110-6 3 3 0 010 6z"/></svg>
+                        <span class="text-xs font-bold font-game uppercase tracking-wider">Female</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex items-start pt-2">
+                <input type="checkbox" id="terms" class="w-4 h-4 mt-0.5 rounded accent-booyahOrange bg-gameDark border-booyahOrange/20" required>
+                <label for="terms" class="ml-2 text-xs text-textDim font-medium cursor-pointer">
+                    I agree to the <button type="button" onclick="navigate('privacy.html')" class="text-booyahOrange hover:underline">Privacy Policy</button> and Rules.
+                </label>
+            </div>
+
+            <div class="pt-4 pb-6">
+                <button type="submit" id="reg-btn" class="w-full py-4 bg-gradient-to-r from-fireRed to-booyahOrange text-white font-game font-black tracking-widest uppercase hover:brightness-110 active:scale-95 transition-all clip-btn shadow-[0_0_15px_rgba(227,0,82,0.3)]">
+                    REGISTER NOW
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center">
+            <p class="text-xs text-textDim">
+                Already have an account? 
+                <button type="button" onclick="navigate('email-login.html')" class="text-booyahOrange font-bold ml-1 hover:text-booyahYellow transition">Login</button>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>`;
+            } else {
+                input.type = 'password';
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
+            }
+        }
+
+        window.navigate = function(page) {
+            window.parent.postMessage({ type: 'NAVIGATE', route: page }, '*');
+        }
+
+        function generateDisplayUID() {
+            return Math.floor(10000000 + Math.random() * 90000000).toString();
+        }
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nickname = document.getElementById('reg-nickname').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const confirm = document.getElementById('reg-confirm').value;
+            const gender = document.querySelector('input[name="gender"]:checked').value;
+            const btn = document.getElementById('reg-btn');
+
+            if (password !== confirm) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            if (password.length < 8) {
+                alert("Password must be at least 8 characters!");
+                return;
+            }
+
+            try {
+                btn.textContent = "CREATING...";
+                btn.disabled = true;
+
+                // 1. Create user document first to defeat the index.html race condition
+                const tempUid = generateDisplayUID();
+                const avatarUrl = gender === 'female' 
+                    ? 'images/avatar/default_female.webp' 
+                    : 'images/avatar/default_male.webp';
+
+                // 2. Perform Firebase Auth registration
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // 3. Write profile directly under Auth User UID
+                const savePromise = db.collection('users').doc(user.uid).set({
+                    uid: tempUid,
+                    nickname: nickname,
+                    email: email,
+                    gender: gender,
+                    avatar: avatarUrl,
+                    diamonds: 0,
+                    coins: 0,
+                    dm_limit: 100,
+                    group_limit: 250,
+                    channel_limit: 500,
+                    createdAt: new Date().toISOString()
+                });
+
+                // 10 second timeout check
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => {
+                        reject(new Error("Database connection timed out! Please ensure you have created and activated the Firestore Database in your Firebase Console."));
+                    }, 10000);
+                });
+
+                await Promise.race([savePromise, timeoutPromise]);
+
+                // Manually tell the parent to show the navbar and navigate
+                window.parent.postMessage({ type: 'SHOW_NAVBAR' }, '*');
+                window.navigate('home.html');
+            } catch (error) {
+                console.error("Error registering:", error);
+                alert("Registration failed: " + error.message);
+                btn.textContent = "REGISTER NOW";
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

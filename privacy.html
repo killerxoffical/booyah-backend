@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>BOOYAH - Privacy Policy</title>
+    <link rel="icon" type="image/png" href="images/app-logo.webp">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    
+    <script src="theme.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gameDark: 'rgb(var(--bg-primary-rgb) / <alpha-value>)',
+                        gameCard: 'rgb(var(--bg-card-rgb) / <alpha-value>)',
+                        gameCardLight: 'rgb(var(--bg-card-light-rgb) / <alpha-value>)',
+                        booyahOrange: '#FF6B00',
+                        booyahYellow: '#FFCC00',
+                        fireRed: '#E30052',
+                        cyberBlue: '#00F0FF',
+                        textDim: 'rgb(var(--text-dim-rgb) / <alpha-value>)',
+                        tPrimary: 'rgb(var(--text-primary-rgb) / <alpha-value>)',
+                        tBorder: 'rgb(var(--border-color-rgb) / <alpha-value>)'
+                    },
+                    fontFamily: {
+                        game: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: rgb(var(--bg-primary-rgb)); color: rgb(var(--text-primary-rgb)); font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header class="w-full bg-gameCard border-b border-booyahOrange/10 px-4 py-3 flex items-center gap-3.5 shadow-md shrink-0">
+        <button onclick="goBack()" class="w-8 h-8 rounded-lg bg-gameDark border border-tBorder/5 flex items-center justify-center text-textDim hover:text-tPrimary active:scale-90 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <h2 class="font-game font-black text-sm sm:text-base text-tPrimary tracking-wide uppercase">PRIVACY POLICY</h2>
+    </header>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 no-scrollbar pb-10">
+        <div class="bg-gameCard/95 border border-tBorder/5 p-5 rounded-2xl shadow-lg space-y-4">
+            <div>
+                <h3 class="font-game font-bold text-sm text-booyahOrange mb-1">1. DATA COLLECTION</h3>
+                <p class="text-xs text-textDim leading-relaxed">
+                    By registering for BOOYAH DAY, you agree to our data collection practices. We collect your Nickname, Email ID, and basic gameplay metrics to enhance user experience and maintain fairness in all matches.
+                </p>
+            </div>
+            
+            <div>
+                <h3 class="font-game font-bold text-sm text-cyberBlue mb-1">2. FAIR PLAY & ANTI-CHEAT</h3>
+                <p class="text-xs text-textDim leading-relaxed">
+                    BOOYAH DAY maintains a strict zero-tolerance policy against cheating, hacks, and toxic behavior. Any account found violating these rules will be permanently banned from the arena.
+                </p>
+            </div>
+
+            <div>
+                <h3 class="font-game font-bold text-sm text-booyahYellow mb-1">3. ACCOUNT SECURITY</h3>
+                <p class="text-xs text-textDim leading-relaxed">
+                    You are solely responsible for maintaining the confidentiality of your account credentials. We will never ask for your password outside of the official application.
+                </p>
+            </div>
+            
+            <div>
+                <h3 class="font-game font-bold text-sm text-fireRed mb-1">4. VIRTUAL CURRENCY</h3>
+                <p class="text-xs text-textDim leading-relaxed">
+                    Diamonds and Coins earned or purchased hold no real-world monetary value and cannot be exchanged for cash. They are strictly for in-app upgrades and contest entries.
+                </p>
+            </div>
+        </div>
+
+        <div class="text-center pb-4">
+            <p class="text-[10px] text-textDim font-semibold tracking-widest uppercase">Last updated: July 2026</p>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            // Tell parent window to navigate back to register
+            window.parent.postMessage({ type: 'NAVIGATE', route: 'register.html' }, '*');
+        }
+    </script>
+</body>
+</html>
+

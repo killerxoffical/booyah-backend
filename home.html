@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>BOOYAH - Home</title>
+    <link rel="icon" type="image/png" href="images/app-logo.webp">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- Theme engine — MUST load before Tailwind -->
+    <script src="theme.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gameDark: 'rgb(var(--bg-primary-rgb) / <alpha-value>)',
+                        gameCard: 'rgb(var(--bg-card-rgb) / <alpha-value>)',
+                        gameCardLight: 'rgb(var(--bg-card-light-rgb) / <alpha-value>)',
+                        booyahOrange: '#FF6B00',
+                        booyahYellow: '#FFCC00',
+                        fireRed: '#E30052',
+                        cyberBlue: '#00F0FF',
+                        textDim: 'rgb(var(--text-dim-rgb) / <alpha-value>)',
+                        tPrimary: 'rgb(var(--text-primary-rgb) / <alpha-value>)',
+                        tBorder: 'rgb(var(--border-color-rgb) / <alpha-value>)'
+                    },
+                    fontFamily: { game: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: transparent; }
+        .clip-card { clip-path: polygon(0 0, 92% 0, 100% 12%, 100% 100%, 8% 100%, 0 88%); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col justify-between overflow-hidden relative">
+
+    <!-- ================== A. APP HEADER ================== -->
+    <header class="w-full bg-gameCard/95 border-b border-booyahOrange/10 px-4 py-2.5 flex items-center justify-between shadow-lg relative z-10 min-h-[60px]">
+        <div class="flex items-center gap-3">
+            <div class="relative z-10">
+                <div class="w-10 h-10 rounded-xl border border-booyahOrange/60 bg-gameDark overflow-hidden flex items-center justify-center shadow-sm">
+                    <img id="header-avatar" src="images/avatar/default_male.webp" alt="Avatar" class="w-full h-full object-cover">
+                </div>
+            </div>
+            <div class="leading-tight flex flex-col justify-center z-10">
+                <h3 id="header-nickname" class="text-xs font-black font-game tracking-wider text-tPrimary">GAMER</h3>
+                <span id="header-uid" class="text-[9px] font-bold font-game text-booyahYellow tracking-wider mt-0.5">UID: --------</span>
+            </div>
+        </div>
+        
+        <!-- Background Logo Watermark -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none flex items-center justify-center opacity-25 z-0">
+            <img src="images/others/booyah_day.webp" alt="Background" class="h-[75%] w-auto object-contain drop-shadow-[0_0_8px_rgba(255,107,0,0.3)]">
+        </div>
+    </header>
+
+    <!-- ================== B. SCROLLABLE BODY ================== -->
+    <main class="flex-1 overflow-y-auto px-4 py-4 scrollbar-none pb-6">
+
+        <!-- ★ Skeleton Loading State ★ -->
+        <div id="skeleton-view" class="space-y-5 w-full">
+            <div class="w-full h-32 skeleton rounded-xl"></div>
+            <div class="flex justify-between items-center mt-6">
+                <div class="w-32 h-4 skeleton rounded"></div>
+            </div>
+            <div class="w-full h-24 skeleton rounded-xl"></div>
+            <div class="w-full h-24 skeleton rounded-xl"></div>
+        </div>
+
+        <!-- ★ Main Content ★ -->
+        <div id="main-content" class="hidden opacity-0 space-y-5">
+            <!-- Image Slider -->
+            <div class="w-full relative rounded-2xl group pb-1">
+                <div id="home-slider" class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth w-full rounded-2xl gap-3" style="-webkit-overflow-scrolling: touch;" onscroll="updateSliderDots()">
+                    <img src="images/slider/slider_1.webp" onerror="this.src='images/others/loading_bg.webp'; updateSliderDots();" draggable="false" oncontextmenu="return false;" class="w-full h-[150px] object-cover snap-center shrink-0 rounded-2xl shadow-lg border border-tBorder/10 pointer-events-none select-none">
+                    <img src="images/slider/slider_2.webp" onerror="this.style.display='none'; updateSliderDots();" draggable="false" oncontextmenu="return false;" class="w-full h-[150px] object-cover snap-center shrink-0 rounded-2xl shadow-lg border border-tBorder/10 pointer-events-none select-none">
+                    <img src="images/slider/slider_3.webp" onerror="this.style.display='none'; updateSliderDots();" draggable="false" oncontextmenu="return false;" class="w-full h-[150px] object-cover snap-center shrink-0 rounded-2xl shadow-lg border border-tBorder/10 pointer-events-none select-none">
+                    <img src="images/slider/slider_4.webp" onerror="this.style.display='none'; updateSliderDots();" draggable="false" oncontextmenu="return false;" class="w-full h-[150px] object-cover snap-center shrink-0 rounded-2xl shadow-lg border border-tBorder/10 pointer-events-none select-none">
+                    <img src="images/slider/slider_5.webp" onerror="this.style.display='none'; updateSliderDots();" draggable="false" oncontextmenu="return false;" class="w-full h-[150px] object-cover snap-center shrink-0 rounded-2xl shadow-lg border border-tBorder/10 pointer-events-none select-none">
+                </div>
+                <!-- Pagination Dots -->
+                <div id="slider-dots" class="absolute bottom-3 left-0 right-0 flex justify-center items-center gap-1.5 z-10 pointer-events-none">
+                    <div class="h-1.5 w-4 bg-white rounded-full transition-all duration-300 shadow"></div>
+                </div>
+            </div>
+
+            <!-- Section Title: Matches / Tournaments -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-game font-black text-xs tracking-widest text-booyahYellow">ACTIVE MATCHES</h3>
+                </div>
+
+                <!-- Matches will be loaded dynamically -->
+            </div>
+        </div>
+
+    </main>
+    <script>
+        // Slider Dots Logic
+        function updateSliderDots() {
+            const slider = document.getElementById('home-slider');
+            const dotsContainer = document.getElementById('slider-dots');
+            if(!slider || !dotsContainer) return;
+            
+            const visibleImages = Array.from(slider.children).filter(img => img.style.display !== 'none');
+            if(visibleImages.length === 0) return;
+
+            // Recreate dots if needed
+            if (dotsContainer.children.length !== visibleImages.length) {
+                dotsContainer.innerHTML = '';
+                visibleImages.forEach(() => {
+                    const d = document.createElement('div');
+                    d.className = 'h-1.5 w-1.5 bg-white/50 rounded-full transition-all duration-300 shadow';
+                    dotsContainer.appendChild(d);
+                });
+            }
+            
+            // The item width + gap
+            const itemWidth = slider.scrollWidth / visibleImages.length;
+            const index = Math.round(slider.scrollLeft / itemWidth) || 0;
+            const safeIndex = Math.min(Math.max(index, 0), visibleImages.length - 1);
+            
+            const dots = dotsContainer.children;
+            for(let i=0; i<dots.length; i++) {
+                if(i === safeIndex) {
+                    dots[i].className = 'h-1.5 w-4 bg-white rounded-full transition-all duration-300 shadow';
+                } else {
+                    dots[i].className = 'h-1.5 w-1.5 bg-white/50 rounded-full transition-all duration-300 shadow';
+                }
+            }
+        }
+        setTimeout(updateSliderDots, 100);
+
+        // Auto slide logic
+        let autoSlideInterval;
+        function startAutoSlide() {
+            if(autoSlideInterval) clearInterval(autoSlideInterval);
+            autoSlideInterval = setInterval(() => {
+                const slider = document.getElementById('home-slider');
+                if(!slider) return;
+                
+                const visibleImages = Array.from(slider.children).filter(img => img.style.display !== 'none');
+                if(visibleImages.length <= 1) return;
+                
+                if (Math.ceil(slider.scrollLeft + slider.clientWidth) >= slider.scrollWidth - 10) {
+                    slider.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    slider.scrollBy({ left: slider.clientWidth, behavior: 'smooth' });
+                }
+            }, 5000);
+        }
+        
+        setTimeout(startAutoSlide, 500);
+    </script>
+    <script>
+        // ★★★ INSTANT CACHE SYSTEM for Header Stats ★★★
+        function applyUserData(data) {
+            const nicknameEl = document.getElementById('header-nickname');
+            if (nicknameEl) nicknameEl.textContent = data.nickname || 'GAMER';
+
+            const uidEl = document.getElementById('header-uid');
+            if (uidEl) uidEl.textContent = 'UID: ' + (data.uid || '--------');
+            
+            const avatarEl = document.getElementById('header-avatar');
+            if (avatarEl && data.avatar) {
+                avatarEl.src = data.avatar;
+            }
+        }
+
+        function saveToCache(data) {
+            try {
+                const cache = {
+                    nickname: data.nickname || '',
+                    uid: data.uid || '',
+                    avatar: data.avatar || ''
+                };
+                localStorage.setItem('booyah_home_cache', JSON.stringify(cache));
+            } catch(e) { /* ignore storage errors */ }
+        }
+
+        function hideLoader() {
+            const skeleton = document.getElementById('skeleton-view');
+            const content = document.getElementById('main-content');
+            
+            if (skeleton && content) {
+                skeleton.remove();
+                content.classList.remove('hidden', 'opacity-0');
+                content.classList.add('row-animate');
+            }
+        }
+
+        // ★ STEP 1: Load cached data INSTANTLY
+        try {
+            const cached = JSON.parse(localStorage.getItem('booyah_home_cache'));
+            if (cached && cached.nickname) {
+                applyUserData(cached);
+                hideLoader();
+            }
+        } catch(e) {}
+
+        // ★ FAILSAFE: Force-remove loader after 5 seconds no matter what
+        setTimeout(() => {
+            hideLoader();
+        }, 5000);
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                const userRef = db.collection('users').doc(user.uid);
+                userRef.onSnapshot((docSnap) => {
+                    if (docSnap.exists) {
+                        const data = docSnap.data();
+                        applyUserData(data);
+                        saveToCache(data);
+                    } else {
+                        userRef.set({
+                            nickname: 'GAMER',
+                            uid: (Math.floor(Math.random() * 900000000) + 100000000).toString(),
+                            avatar: 'images/avatar/default_male.webp',
+                            diamonds: 0,
+                            coins: 0
+                        }).catch(e => console.error('[Home] Failed to recreate user doc:', e));
+                    }
+                    hideLoader();
+                }, (error) => {
+                    console.error('[Home] Firestore error:', error.message);
+                    hideLoader();
+                });
+            } else {
+                hideLoader();
+                window.parent.postMessage({ type: 'NAVIGATE', route: 'login.html' }, '*');
+            }
+        });
+    </script>
+</body>
+</html>

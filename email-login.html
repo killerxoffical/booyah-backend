@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>BOOYAH - Email Login</title>
+    <link rel="icon" type="image/png" href="images/app-logo.webp">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- Theme engine — MUST load before Tailwind -->
+    <script src="theme.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gameDark: 'rgb(var(--bg-primary-rgb) / <alpha-value>)',
+                        gameCard: 'rgb(var(--bg-card-rgb) / <alpha-value>)',
+                        gameCardLight: 'rgb(var(--bg-card-light-rgb) / <alpha-value>)',
+                        booyahOrange: '#FF6B00',
+                        booyahYellow: '#FFCC00',
+                        fireRed: '#E30052',
+                        cyberBlue: '#00F0FF',
+                        textDim: 'rgb(var(--text-dim-rgb) / <alpha-value>)',
+                        tPrimary: 'rgb(var(--text-primary-rgb) / <alpha-value>)',
+                        tBorder: 'rgb(var(--border-color-rgb) / <alpha-value>)'
+                    },
+                    fontFamily: { game: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background-color: transparent; 
+            background-image: url('images/others/login_bg.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .bg-overlay { background: linear-gradient(to bottom, rgba(10,14,26,0.3) 0%, rgba(10,14,26,0.9) 100%); }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col select-none overflow-y-auto no-scrollbar relative">
+    
+    <!-- Background Overlay -->
+    <div class="absolute inset-0 bg-overlay z-0 pointer-events-none"></div>
+
+    <div class="w-full flex-1 flex flex-col p-6 pt-16 z-10 relative">
+
+        <div class="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
+            <button onclick="navigate('login.html')" class="text-xs text-textDim hover:text-white font-bold flex items-center gap-1 mb-6 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                Back to Options
+            </button>
+            <form id="login-form" class="space-y-5 w-full">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-textDim mb-1.5 font-game">Gamer Email</label>
+                    <input type="email" id="login-email" placeholder="gamer@booyah.com" class="w-full px-4 py-3.5 rounded-lg text-sm text-tPrimary bg-gameCard/90 border border-booyahOrange/20 focus:border-booyahOrange outline-none transition" required>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-textDim mb-1.5 font-game">Password</label>
+                    <div class="relative">
+                        <input type="password" id="login-password" placeholder="••••••••" class="w-full px-4 py-3.5 pr-12 rounded-lg text-sm text-tPrimary bg-gameCard/90 border border-booyahOrange/20 focus:border-booyahOrange outline-none transition" required>
+                        <button type="button" onclick="togglePassword('login-password', this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-textDim hover:text-white transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" id="login-btn" class="w-full py-4 bg-gradient-to-r from-booyahOrange to-booyahYellow text-gameDark font-game font-black tracking-widest uppercase hover:brightness-110 active:scale-95 transition-all rounded-lg shadow-[0_0_15px_rgba(255,204,0,0.3)]">
+                        LOGIN NOW
+                    </button>
+                    <div class="text-center mt-4">
+                        <a href="#" class="text-xs font-bold text-textDim hover:text-booyahYellow transition">Forgot Password?</a>
+                    </div>
+                </div>
+            </form>
+
+            <div class="text-center mt-8">
+                <p class="text-xs text-textDim">
+                    Don't have an arena account? 
+                    <button onclick="navigate('register.html')" class="text-booyahOrange font-bold ml-1 hover:text-booyahYellow transition">Register Now</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>`;
+            } else {
+                input.type = 'password';
+                btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
+            }
+        }
+
+        window.navigate = function(page) {
+            window.parent.postMessage({ type: 'NAVIGATE', route: page }, '*');
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-btn');
+
+            try {
+                btn.textContent = "AUTHENTICATING...";
+                btn.disabled = true;
+
+                await auth.signInWithEmailAndPassword(email, password);
+                
+                // Auth state is handled in index.html, it will auto route
+            } catch (error) {
+                console.error("Login Error:", error);
+                alert("Login failed: " + error.message);
+                btn.textContent = "LOGIN NOW";
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
+

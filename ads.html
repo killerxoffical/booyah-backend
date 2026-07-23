@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>BOOYAH - Sponsor Ad</title>
+    <link rel="icon" type="image/png" href="images/app-logo.webp">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- Theme engine -->
+    <script src="theme.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gameDark: 'rgb(var(--bg-primary-rgb) / <alpha-value>)',
+                        gameCard: 'rgb(var(--bg-card-rgb) / <alpha-value>)',
+                        gameCardLight: 'rgb(var(--bg-card-light-rgb) / <alpha-value>)',
+                        booyahOrange: '#FF6B00',
+                        booyahYellow: '#FFCC00',
+                        tPrimary: 'rgb(var(--text-primary-rgb) / <alpha-value>)',
+                        textDim: 'rgb(var(--text-dim-rgb) / <alpha-value>)',
+                        tBorder: 'rgb(var(--border-color-rgb) / <alpha-value>)',
+                        fireRed: '#E30052'
+                    },
+                    fontFamily: { game: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: rgb(var(--bg-primary-rgb)); }
+        
+        .pulse-circle {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 0 0 rgba(255, 204, 0, 0.7); }
+            70% { transform: scale(1.1); opacity: 0.8; box-shadow: 0 0 0 20px rgba(255, 204, 0, 0); }
+            100% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 0 0 rgba(255, 204, 0, 0); }
+        }
+    </style>
+</head>
+<body class="w-screen h-screen overflow-hidden text-tPrimary select-none flex items-center justify-center relative">
+
+    <!-- Loading State -->
+    <div id="loader" class="absolute inset-0 z-50 bg-gameDark flex flex-col items-center justify-center">
+        <div class="w-12 h-12 border-4 border-booyahYellow border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="font-game font-bold text-sm text-booyahYellow tracking-widest animate-pulse">অ্যাড প্রস্তুত হচ্ছে...</p>
+    </div>
+
+    <!-- Warning Popup (Rules) -->
+    <div id="rules-modal" class="fixed inset-0 bg-gameDark/90 backdrop-blur-sm z-[60] flex items-center justify-center hidden">
+        <div class="bg-gameCard p-6 md:p-8 rounded-3xl border-2 border-fireRed/30 w-full max-w-[95%] md:max-w-lg mx-4 transform transition-all shadow-[0_10px_40px_rgba(227,0,82,0.2)]">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-20 h-20 bg-fireRed/10 rounded-full flex items-center justify-center mb-5 animate-pulse border border-fireRed/30">
+                    <svg class="w-10 h-10 text-fireRed" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <h3 class="text-2xl font-black text-tPrimary mb-2 tracking-widest font-game">সতর্কতা ও নিয়মাবলী!</h3>
+                <div class="w-full text-[15px] text-textDim mb-8 font-medium leading-relaxed text-left space-y-4 bg-gameCardLight p-5 rounded-2xl border border-tBorder/10">
+                    <p class="text-lg text-tPrimary font-bold flex items-center gap-2">
+                        <span class="text-2xl">🔥</span> টাস্ক পূরণের নিয়ম:
+                    </p>
+                    <ul class="space-y-4 mt-2">
+                        <li class="flex items-start gap-3">
+                            <svg class="w-6 h-6 text-booyahOrange shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span class="text-sm md:text-base">যখন বলা হবে, স্ক্রিনের যেকোনো জায়গায় ক্লিক করে <b>স্পন্সর অ্যাড ওপেন করুন</b>।</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-6 h-6 text-booyahOrange shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span class="text-sm md:text-base">টাইমার স্ক্রিনে অন্তত <b>১৫ সেকেন্ড</b> অপেক্ষা করতে হবে।</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-6 h-6 text-booyahOrange shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                            <span class="text-sm md:text-base">"Action Required" লেখা আসলে <b>অবশ্যই দ্বিতীয়বার ক্লিক</b> করে আরেকটি অ্যাড দেখতে হবে।</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-6 h-6 text-booyahOrange shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            <span class="text-sm md:text-base">"I am not a robot" বা কোনো ক্যাপচা আসলে তা অবশ্যই পূরণ করবেন।</span>
+                        </li>
+                    </ul>
+                    <div class="bg-fireRed/10 border-l-4 border-fireRed p-3 mt-5 rounded-r-lg">
+                        <p class="text-fireRed font-bold text-center text-[13px] md:text-sm">নিয়ম অমান্য করলে অ্যাকাউন্ট পার্মানেন্ট ব্যান করা হবে!</p>
+                    </div>
+                </div>
+                
+                <button id="accept-rules-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-fireRed to-booyahOrange text-white font-black hover:brightness-110 transition shadow-[0_5px_20px_rgba(227,0,82,0.4)] active:scale-95 uppercase tracking-widest text-lg font-game">
+                    আমি নিয়ম বুঝেছি
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background UI -->
+    <div class="absolute inset-0 opacity-20 pointer-events-none bg-[url('images/others/loading_bg.webp')] bg-cover bg-center mix-blend-overlay"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-gameDark to-transparent pointer-events-none"></div>
+
+    <!-- Step 1: Initial Click to start -->
+    <button id="step-1-btn" class="hidden absolute inset-0 w-full h-full z-40 flex flex-col items-center justify-center outline-none bg-gameDark/50 backdrop-blur-sm cursor-pointer">
+        <div class="bg-gameCard border-2 border-booyahYellow shadow-[0_5px_30px_rgba(255,204,0,0.3)] rounded-3xl p-8 max-w-[85%] md:max-w-md flex flex-col items-center pulse-circle">
+            <svg class="w-16 h-16 text-booyahYellow mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59"/></svg>
+            <h2 class="font-game font-black text-tPrimary text-2xl text-center mb-3">ক্লিক করুন!</h2>
+            <p class="text-[15px] text-textDim text-center font-medium">অ্যাড দেখতে স্ক্রিনের যেকোনো জায়গায় ট্যাপ করুন।</p>
+        </div>
+    </button>
+
+    <!-- Step 2: Timer UI -->
+    <div id="step-2-ui" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
+        <div class="relative w-40 h-40 flex items-center justify-center mb-8">
+            <svg class="absolute inset-0 w-full h-full transform -rotate-90">
+                <circle cx="80" cy="80" r="70" class="stroke-tBorder opacity-20" stroke-width="8" fill="none"></circle>
+                <circle id="timer-circle" cx="80" cy="80" r="70" class="stroke-booyahYellow transition-all duration-1000 ease-linear" stroke-width="8" fill="none" stroke-dasharray="440" stroke-dashoffset="0"></circle>
+            </svg>
+            <span id="timer-text" class="font-game font-black text-5xl text-tPrimary drop-shadow-md">30</span>
+        </div>
+        <p class="text-[15px] font-bold text-textDim text-center px-6 leading-relaxed">অ্যাড দেখা শেষ হওয়া পর্যন্ত অপেক্ষা করুন...<br><span class="text-sm text-booyahOrange font-bold mt-2 block bg-booyahOrange/10 py-1.5 px-4 rounded-full inline-block">এই পেজটি বন্ধ করবেন না!</span></p>
+    </div>
+
+    <!-- Step 3: Pause & Click Again -->
+    <button id="step-3-btn" class="hidden absolute inset-0 w-full h-full z-40 flex flex-col items-center justify-center outline-none bg-gameDark/80 backdrop-blur-md cursor-pointer">
+        <div class="bg-gameCard border-2 border-booyahOrange shadow-[0_5px_30px_rgba(255,107,0,0.3)] rounded-3xl p-8 max-w-[85%] md:max-w-md flex flex-col items-center pulse-circle">
+            <svg class="w-16 h-16 text-booyahOrange mb-4 animate-bounce" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <h2 class="font-game font-black text-booyahOrange text-2xl text-center mb-3">অ্যাকশন প্রয়োজন!</h2>
+            <p class="text-[15px] text-textDim text-center font-bold">বাকি অ্যাডটুকু দেখতে স্ক্রিনে আবার ক্লিক করুন!</p>
+        </div>
+    </button>
+
+    <script>
+        let monetagLinks = [];
+        let currentLink = "";
+        let timeLeft = 30;
+        let timerInterval;
+
+        const loader = document.getElementById('loader');
+        const step1Btn = document.getElementById('step-1-btn');
+        const step2UI = document.getElementById('step-2-ui');
+        const timerText = document.getElementById('timer-text');
+        const timerCircle = document.getElementById('timer-circle');
+        const step3Btn = document.getElementById('step-3-btn');
+        const rulesModal = document.getElementById('rules-modal');
+        const acceptRulesBtn = document.getElementById('accept-rules-btn');
+
+        // Rules accepted logic
+        acceptRulesBtn.addEventListener('click', () => {
+            rulesModal.classList.add('hidden');
+            step1Btn.classList.remove('hidden'); // Only show step 1 AFTER rules accepted
+        });
+
+        // Load links from Firebase — MUST wait for auth first
+        function loadMonetagLinks() {
+            firebase.database().ref('settings/monetag_links').once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const val = child.val();
+                        if (val && val.url) {
+                            monetagLinks.push(val.url);
+                        } else if (typeof val === 'string') {
+                            monetagLinks.push(val);
+                        }
+                    });
+                }
+                if (monetagLinks.length > 0) {
+                    currentLink = monetagLinks[Math.floor(Math.random() * monetagLinks.length)];
+                    loader.classList.add('hidden');
+                    rulesModal.classList.remove('hidden'); // Show rules modal first
+                } else {
+                    alert("No ads available right now. Please try again later.");
+                    window.location.href = 'earn.html';
+                }
+            }).catch(err => {
+                console.error("Error loading monetag links:", err);
+                alert("Error loading ads. Please try again later.");
+                window.location.href = 'earn.html';
+            });
+        }
+
+        // Ensure user is logged in, THEN load monetag links
+        auth.onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                // User is logged in — now safe to load monetag links
+                loadMonetagLinks();
+            }
+        });
+
+        // robust redirect function to bypass popup blockers
+        function openLink(url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function updateTimerUI(seconds) {
+            timerText.innerText = seconds;
+            const offset = 440 - (440 * (seconds / 30));
+            timerCircle.style.strokeDashoffset = offset;
+        }
+
+        // STEP 1 CLICK -> START TIMER
+        step1Btn.addEventListener('click', () => {
+            openLink(currentLink);
+            step1Btn.classList.add('hidden');
+            step2UI.classList.remove('hidden');
+            startTimer(30, 15); // Run until 15s is reached (i.e., ran for 15s)
+        });
+
+        // STEP 3 CLICK -> RESUME TIMER
+        step3Btn.addEventListener('click', () => {
+            // Pick a new random link for variety if available
+            if (monetagLinks.length > 1) {
+                currentLink = monetagLinks[Math.floor(Math.random() * monetagLinks.length)];
+            }
+            openLink(currentLink);
+            step3Btn.classList.add('hidden');
+            startTimer(15, 0); // Run remaining 15s to 0
+        });
+
+        function startTimer(startSeconds, stopAt) {
+            timeLeft = startSeconds;
+            updateTimerUI(timeLeft);
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI(timeLeft);
+
+                if (timeLeft === stopAt) {
+                    clearInterval(timerInterval);
+                    if (stopAt > 0) {
+                        // Pause at 15s, show step 3
+                        step3Btn.classList.remove('hidden');
+                    } else {
+                        // Reached 0 -> Reward user
+                        grantReward();
+                    }
+                }
+            }, 1000);
+        }
+
+        async function grantReward() {
+            if (!auth.currentUser) return;
+            
+            // Randomly determine reward: 80% chance for Coins (1-10), 20% chance for Diamonds (1-3)
+            let rewardType = 'coins';
+            let amount = 0;
+            if (Math.random() < 0.20) {
+                rewardType = 'diamonds';
+                amount = Math.floor(Math.random() * 3) + 1; // 1 to 3 diamonds
+            } else {
+                rewardType = 'coins';
+                amount = Math.floor(Math.random() * 10) + 1; // 1 to 10 coins
+            }
+
+            const userRef = db.collection('users').doc(auth.currentUser.uid);
+
+            try {
+                let updates = {};
+                updates[rewardType] = firebase.firestore.FieldValue.increment(amount);
+                
+                // ★ SERVER TIMESTAMP — Anti-cheat: use server time, not client time!
+                updates['lastClaimTime'] = firebase.firestore.FieldValue.serverTimestamp();
+                updates['totalClaims'] = firebase.firestore.FieldValue.increment(1);
+
+                // Use set with merge:true instead of update. This fixes the NOT_FOUND error!
+                await userRef.set(updates, { merge: true });
+                
+                // Calculate and store nextClaimTime (24h from now using a second write)
+                // We read back the doc to get the actual server timestamp, then set nextClaimTime
+                try {
+                    const docSnap = await userRef.get();
+                    if (docSnap.exists && docSnap.data().lastClaimTime) {
+                        const lastClaim = docSnap.data().lastClaimTime;
+                        const nextClaimDate = new Date(lastClaim.toMillis() + (24 * 60 * 60 * 1000));
+                        await userRef.set({ nextClaimTime: firebase.firestore.Timestamp.fromDate(nextClaimDate) }, { merge: true });
+                    }
+                } catch(e) {
+                    console.error("Failed to set nextClaimTime", e);
+                }
+                
+                // Save a transaction record for the history screen
+                try {
+                    await userRef.collection('transactions').add({
+                        type: 'earn',
+                        title: 'Ad Watch Reward',
+                        amount: amount,
+                        currency: rewardType,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch(e) {
+                    console.error("Failed to save transaction history", e);
+                }
+                
+                const iconColor = rewardType === 'diamonds' ? 'text-blue-400' : 'text-booyahYellow';
+                const svgIcon = rewardType === 'diamonds' 
+                    ? `<svg class="w-16 h-16 text-blue-400 mb-4 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>`
+                    : `<svg class="w-16 h-16 text-booyahYellow mb-4 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+
+                // Show success message briefly then redirect
+                step2UI.innerHTML = `
+                    <div class="bg-gameCard border-2 border-emerald-500 rounded-3xl p-8 flex flex-col items-center scale-110 shadow-[0_10px_40px_rgba(16,185,129,0.2)] transition-all">
+                        ${svgIcon}
+                        <h2 class="font-game font-black text-tPrimary text-xl text-center mb-2">রিওয়ার্ড পাওয়া গেছে!</h2>
+                        <p class="text-[15px] ${iconColor} font-bold">+${amount} ${rewardType.toUpperCase()} অ্যাড হয়েছে</p>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    window.location.href = 'earn.html';
+                }, 2500);
+
+            } catch (err) {
+                console.error("Failed to grant reward", err);
+                alert("Failed to claim reward. Please contact support.");
+                window.location.href = 'earn.html';
+            }
+        }
+    </script>
+</body>
+</html>
+

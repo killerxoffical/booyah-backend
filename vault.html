@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>BOOYAH - Vault</title>
+    <link rel="icon" type="image/png" href="images/app-logo.webp">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Teko:wght@700&display=swap" rel="stylesheet">
+
+    <!-- Theme engine -->
+    <script src="theme.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gameDark: 'rgb(var(--bg-primary-rgb) / <alpha-value>)',
+                        gameCard: 'rgb(var(--bg-card-rgb) / <alpha-value>)',
+                        gameCardLight: 'rgb(var(--bg-card-light-rgb) / <alpha-value>)',
+                        booyahOrange: '#FF6B00',
+                        booyahYellow: '#FFCC00',
+                        fireRed: '#E30052',
+                        cyberBlue: '#00F0FF',
+                        textDim: 'rgb(var(--text-dim-rgb) / <alpha-value>)',
+                        tPrimary: 'rgb(var(--text-primary-rgb) / <alpha-value>)',
+                        tBorder: 'rgb(var(--border-color-rgb) / <alpha-value>)'
+                    },
+                    fontFamily: {
+                        game: ['Inter', 'sans-serif'],
+                        ff: ['Teko', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: rgb(var(--bg-primary-rgb)); color: rgb(var(--text-primary-rgb)); font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .font-ff { font-family: 'Teko', sans-serif; text-transform: uppercase; }
+        .tab-active { color: #FFCC00; border-bottom: 2px solid #FFCC00; }
+        .tab-inactive { color: rgb(var(--text-dim-rgb)); border-bottom: 2px solid transparent; }
+    </style>
+</head>
+<body class="w-screen h-screen relative select-none overflow-hidden pb-12 flex flex-col">
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col items-center gap-2 w-[90%] max-w-sm pointer-events-none"></div>
+
+    <!-- HEADER -->
+    <header class="w-full bg-gameCard border-b border-booyahOrange/10 px-4 pt-4 pb-0 flex flex-col gap-3 shadow-sm z-10 shrink-0">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <button onclick="goBack()" class="w-8 h-8 rounded-lg bg-gameDark border border-tBorder/10 flex items-center justify-center text-textDim hover:text-tPrimary transition active:scale-95 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <h1 class="font-game font-black text-lg text-tPrimary tracking-wider uppercase flex items-center gap-2">
+                    <img src="images/icon/sm.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free%20fire/1780775687157_1780775598577.png';" class="w-5 h-5 object-contain">
+                    PLAYER VAULT
+                </h1>
+            </div>
+            <button onclick="openRedeemModal()" class="bg-gradient-to-r from-booyahOrange to-booyahYellow text-gameDark px-3 py-1.5 rounded-lg text-[10px] font-game font-black tracking-widest uppercase transition active:scale-95 shadow-[0_0_10px_rgba(255,204,0,0.2)]">
+                REDEEM
+            </button>
+        </div>
+
+        <!-- CATEGORY TABS (ALL removed, BANNERS added) -->
+        <div class="flex items-center w-full overflow-x-auto no-scrollbar gap-2 py-1">
+            <button onclick="switchVaultCategory('avatar')" id="vtab-avatar" class="px-4 py-2 text-xs font-game font-black tracking-widest uppercase tab-active transition-all shrink-0">AVATARS</button>
+            <button onclick="switchVaultCategory('banner')" id="vtab-banner" class="px-4 py-2 text-xs font-game font-black tracking-widest uppercase tab-inactive transition-all shrink-0">BANNERS</button>
+            <button onclick="switchVaultCategory('badge')" id="vtab-badge" class="px-4 py-2 text-xs font-game font-black tracking-widest uppercase tab-inactive transition-all shrink-0">BADGES</button>
+            <button onclick="switchVaultCategory('other')" id="vtab-other" class="px-4 py-2 text-xs font-game font-black tracking-widest uppercase tab-inactive transition-all shrink-0">OTHER</button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="flex-1 w-full relative overflow-y-auto no-scrollbar p-4">
+        <div id="vault-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-3.5 pb-10">
+            <!-- Loading Skeleton -->
+            <div class="aspect-square bg-gameCard/60 border border-tBorder/5 rounded-2xl animate-pulse"></div>
+            <div class="aspect-square bg-gameCard/60 border border-tBorder/5 rounded-2xl animate-pulse"></div>
+            <div class="aspect-square bg-gameCard/60 border border-tBorder/5 rounded-2xl animate-pulse"></div>
+        </div>
+    </div>
+
+    <!-- ITEM DETAIL MODAL -->
+    <div id="vault-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onclick="closeVaultModal()">
+        <div class="bg-gameCard border border-booyahOrange/30 w-full max-w-xs rounded-2xl p-5 shadow-2xl flex flex-col items-center transform scale-95 transition-transform duration-200" onclick="event.stopPropagation()" id="vault-modal-box">
+            <img id="modal-item-img" src="" class="w-20 h-20 object-contain mb-3 rounded-xl border border-tBorder/10 bg-gameDark p-2">
+            <h3 id="modal-item-name" class="font-game font-black text-sm text-tPrimary uppercase tracking-wider mb-1 text-center">ITEM NAME</h3>
+            <span id="modal-item-type" class="text-[10px] text-booyahYellow font-game font-bold uppercase tracking-widest mb-4">CATEGORY</span>
+            
+            <div class="w-full flex gap-3">
+                <button onclick="closeVaultModal()" class="flex-1 bg-gameDark border border-tBorder/10 text-tPrimary py-3 rounded-xl font-game font-bold text-[10px] uppercase tracking-widest active:scale-95 transition hover:bg-tBorder/5">Close</button>
+                <button id="modal-equip-btn" onclick="equipSelectedItem()" class="flex-1 bg-gradient-to-r from-booyahOrange to-booyahYellow text-gameDark py-3 rounded-xl font-game font-black text-[10px] uppercase tracking-widest active:scale-95 transition shadow-[0_0_15px_rgba(255,204,0,0.3)]">EQUIP</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REDEEM MODAL -->
+    <div id="redeem-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onclick="closeRedeemModal()">
+        <div class="bg-gameCard border border-booyahYellow/30 w-full max-w-xs rounded-2xl p-6 shadow-[0_0_40px_rgba(255,204,0,0.1)] flex flex-col transform scale-95 transition-transform duration-200" onclick="event.stopPropagation()" id="redeem-modal-box">
+            <div class="w-12 h-12 mx-auto bg-gradient-to-br from-booyahYellow to-booyahOrange rounded-xl p-0.5 mb-4 shadow-[0_0_20px_rgba(255,140,0,0.3)]">
+                <div class="w-full h-full bg-gameCard rounded-[10px] flex items-center justify-center">
+                    <svg class="w-6 h-6 text-booyahYellow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                </div>
+            </div>
+            
+            <h3 class="font-game font-black text-lg text-white uppercase tracking-wider mb-2 text-center">REDEEM CODE</h3>
+            <p class="text-[10px] text-gray-400 font-game font-bold uppercase tracking-widest mb-5 text-center">Enter code to unlock Vault Items</p>
+            
+            <input type="text" id="redeem-code-input" placeholder="BW-XXXX-XXXX" class="w-full bg-gameDark border-2 border-tBorder/10 focus:border-booyahYellow rounded-xl px-4 py-4 text-center font-mono font-bold text-lg text-booyahYellow outline-none transition tracking-[0.2em] mb-4 uppercase">
+            
+            <button id="redeem-btn" onclick="redeemVaultCode()" class="w-full bg-gradient-to-r from-booyahOrange to-booyahYellow text-gameDark py-3.5 rounded-xl font-game font-black text-[11px] uppercase tracking-widest active:scale-95 transition shadow-[0_0_20px_rgba(255,204,0,0.3)]">
+                CONFIRM REDEEM
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let activeCategory = 'avatar';
+        let userVaultItems = [];
+        let selectedItem = null;
+
+        function showToast(msg, type='success') {
+            const container = document.getElementById('toast-container');
+            if(!container) return;
+            const toast = document.createElement('div');
+            const colors = type === 'success' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-400/40 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : 'bg-fireRed/15 text-red-300 border-fireRed/40 shadow-[0_0_20px_rgba(227,0,82,0.2)]';
+            toast.className = `px-4 py-3 rounded-xl border backdrop-blur-md text-[11px] font-game font-bold tracking-wide ${colors} transform translate-y-[-20px] opacity-0 transition-all duration-300`;
+            toast.innerText = msg;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.style.transform = 'translateY(0)';
+                toast.style.opacity = '1';
+            });
+            setTimeout(() => { 
+                toast.style.transform = 'translateY(-20px)';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function goBack() {
+            window.parent.postMessage({ type: 'NAVIGATE', route: 'profile.html' }, '*');
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                loadUserVault();
+            } else {
+                window.parent.postMessage({ type: 'NAVIGATE', route: 'login.html' }, '*');
+            }
+        });
+
+        function loadUserVault() {
+            try {
+                const cachedUser = localStorage.getItem('userDataCache_' + currentUser.uid);
+                const cachedVault = localStorage.getItem('vaultCache_' + currentUser.uid);
+                if(cachedUser && cachedVault) {
+                    const userData = JSON.parse(cachedUser);
+                    const currentAvatar = userData.avatar || 'images/avatar/default_male.webp';
+                    userVaultItems = JSON.parse(cachedVault);
+                    
+                    userVaultItems.forEach(item => {
+                        if (item.category === 'avatar') item.isEquipped = (item.icon === currentAvatar);
+                    });
+                    renderVaultGrid();
+                }
+            } catch(e) {}
+
+            db.collection('users').doc(currentUser.uid).get().then(userDoc => {
+                const userData = userDoc.data() || {};
+                const currentAvatar = userData.avatar || 'images/avatar/default_male.webp';
+                localStorage.setItem('userDataCache_' + currentUser.uid, JSON.stringify(userData));
+
+                db.collection('users').doc(currentUser.uid).collection('vault').onSnapshot(snap => {
+                    let itemsFromDb = [];
+                    snap.forEach(doc => {
+                        itemsFromDb.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    // Guarantee 2 Default Avatars always present for everyone
+                    const hasDefaultMale = itemsFromDb.some(i => i.id === 'default_male' || i.icon === 'images/avatar/default_male.webp');
+                    const hasDefaultFemale = itemsFromDb.some(i => i.id === 'default_female' || i.icon === 'images/avatar/default_female.webp');
+
+                    if (!hasDefaultMale) {
+                        itemsFromDb.unshift({
+                            id: 'default_male',
+                            name: 'Male Avatar',
+                            category: 'avatar',
+                            icon: 'images/avatar/default_male.webp'
+                        });
+                    }
+
+                    if (!hasDefaultFemale) {
+                        itemsFromDb.unshift({
+                            id: 'default_female',
+                            name: 'Female Avatar',
+                            category: 'avatar',
+                            icon: 'images/avatar/default_female.webp'
+                        });
+                    }
+
+                    // Calculate equipped state for avatars
+                    itemsFromDb.forEach(item => {
+                        if (item.category === 'avatar') {
+                            item.isEquipped = (item.icon === currentAvatar);
+                        }
+                    });
+
+                    userVaultItems = itemsFromDb;
+                    localStorage.setItem('vaultCache_' + currentUser.uid, JSON.stringify(userVaultItems));
+                    renderVaultGrid();
+                });
+            });
+        }
+
+        function switchVaultCategory(cat) {
+            activeCategory = cat;
+            ['avatar', 'banner', 'badge', 'other'].forEach(c => {
+                const btn = document.getElementById(`vtab-${c}`);
+                if(btn) {
+                    if(c === cat) btn.className = 'px-4 py-2 text-xs font-game font-black tracking-widest uppercase tab-active transition-all shrink-0';
+                    else btn.className = 'px-4 py-2 text-xs font-game font-black tracking-widest uppercase tab-inactive transition-all shrink-0';
+                }
+            });
+            renderVaultGrid();
+        }
+
+        function renderVaultGrid() {
+            const grid = document.getElementById('vault-grid');
+            if(!grid) return;
+
+            let filtered = userVaultItems.filter(i => (i.category || 'other').toLowerCase() === activeCategory);
+
+            if(filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-3 sm:col-span-4 flex flex-col items-center justify-center py-16 opacity-60">
+                        <svg class="w-12 h-12 text-tBorder mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        <span class="font-game text-xs font-bold uppercase tracking-widest text-textDim">No items in this category</span>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(item => {
+                const isEquipped = item.isEquipped;
+                html += `
+                    <div onclick="openVaultModal('${item.id}')" class="aspect-square relative rounded-2xl overflow-hidden cursor-pointer active:scale-95 transition-all group bg-black border-2 ${isEquipped ? 'border-booyahYellow shadow-[0_0_18px_rgba(255,204,0,0.35)]' : 'border-white/10 hover:border-booyahOrange/50'}">
+                        ${isEquipped ? `
+                            <div class="absolute top-0 left-0 z-20 w-8 h-8 rounded-tl-2xl overflow-hidden pointer-events-none flex items-center justify-center">
+                                <img src="images/icon/uz.webp" onerror="this.onerror=null; this.src='https://pub-4c6b2dbf3a0c4862a8964b1546de6283.r2.dev/Free%20fire/1780894749741_1780894717430.png';" class="w-full h-full object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]" alt="Selected">
+                            </div>
+                        ` : ''}
+                        <img src="${item.icon || 'images/avatar/default_male.webp'}" class="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-300">
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        function openVaultModal(itemId) {
+            const item = userVaultItems.find(i => i.id === itemId);
+            if(!item) return;
+            selectedItem = item;
+
+            document.getElementById('modal-item-img').src = item.icon || 'images/avatar/default_male.webp';
+            document.getElementById('modal-item-name').innerText = item.name || 'UNNAMED ITEM';
+            document.getElementById('modal-item-type').innerText = (item.category || 'REWARD').toUpperCase();
+            
+            const btn = document.getElementById('modal-equip-btn');
+            if(item.isEquipped) {
+                btn.innerText = 'EQUIPPED';
+                btn.className = 'flex-1 bg-gameDark text-textDim border border-tBorder/10 py-3 rounded-xl font-game font-bold text-[10px] uppercase tracking-widest cursor-not-allowed';
+            } else {
+                btn.innerText = 'EQUIP';
+                btn.className = 'flex-1 bg-gradient-to-r from-booyahOrange to-booyahYellow text-gameDark py-3 rounded-xl font-game font-black text-[10px] uppercase tracking-widest active:scale-95 transition shadow-[0_0_15px_rgba(255,204,0,0.3)]';
+            }
+
+            const modal = document.getElementById('vault-modal');
+            const box = document.getElementById('vault-modal-box');
+            modal.classList.remove('hidden');
+            setTimeout(() => box.classList.remove('scale-95'), 10);
+        }
+
+        function closeVaultModal() {
+            const modal = document.getElementById('vault-modal');
+            const box = document.getElementById('vault-modal-box');
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                selectedItem = null;
+            }, 200);
+        }
+
+        async function equipSelectedItem() {
+            if(!selectedItem || !currentUser) return;
+            const item = selectedItem;
+            if(item.isEquipped) { closeVaultModal(); return; }
+
+            closeVaultModal();
+
+            try {
+                if(item.category === 'avatar') {
+                    await db.collection('users').doc(currentUser.uid).update({
+                        avatar: item.icon
+                    });
+                } else {
+                    await db.collection('users').doc(currentUser.uid).collection('vault').doc(item.id).update({
+                        isEquipped: true
+                    });
+                }
+
+                showToast(`Equipped ${item.name}`);
+                loadUserVault();
+            } catch(e) {
+                showToast('Failed to equip item', 'error');
+            }
+        }
+
+        // REDEEM LOGIC
+        function openRedeemModal() {
+            const modal = document.getElementById('redeem-modal');
+            const box = document.getElementById('redeem-modal-box');
+            document.getElementById('redeem-code-input').value = '';
+            modal.classList.remove('hidden');
+            setTimeout(() => box.classList.remove('scale-95'), 10);
+        }
+
+        function closeRedeemModal() {
+            const modal = document.getElementById('redeem-modal');
+            const box = document.getElementById('redeem-modal-box');
+            box.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        async function redeemVaultCode() {
+            const input = document.getElementById('redeem-code-input');
+            const code = input.value.trim().toUpperCase();
+            const btn = document.getElementById('redeem-btn');
+            
+            if(!code) {
+                showToast("Please enter a code.", "error");
+                return;
+            }
+
+            btn.textContent = "VERIFYING...";
+            btn.disabled = true;
+
+            try {
+                const codeRef = db.collection('vault_codes').doc(code);
+                const codeDoc = await codeRef.get();
+
+                if (!codeDoc.exists) {
+                    showToast("Invalid Redeem Code!", "error");
+                    btn.textContent = "CONFIRM REDEEM";
+                    btn.disabled = false;
+                    return;
+                }
+
+                const data = codeDoc.data();
+                if (data.used) {
+                    showToast("Code already used by someone else!", "error");
+                    btn.textContent = "CONFIRM REDEEM";
+                    btn.disabled = false;
+                    return;
+                }
+
+                // Code is valid. Mark as used.
+                await codeRef.update({ used: true });
+
+                // Add to user's vault
+                await db.collection('users').doc(currentUser.uid).collection('vault').doc(code).set({
+                    name: data.name,
+                    category: data.category,
+                    icon: data.icon,
+                    acquiredAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showToast(`Successfully unlocked ${data.name}!`, "success");
+                closeRedeemModal();
+                loadUserVault(); // Reload the vault items
+
+            } catch(e) {
+                console.error("Redeem error:", e);
+                showToast("Network Error. Try again.", "error");
+            } finally {
+                btn.textContent = "CONFIRM REDEEM";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
